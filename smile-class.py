@@ -21,8 +21,8 @@ class Detection:
     #カスケード
     cascade_path = 'cascade/lbp_in_out_aki_tsuji/cascade.xml'
     #検出器読み込み
-    sideface_cascade = cv2.CascadeClassifier(path_1 + cascade_path)
-    second_cascade = cv2.CascadeClassifier(path_2 + cascade_path)
+    sideface_cascade = cv2.CascadeClassifier(cascade_1 + cascade_path)
+    second_cascade = cv2.CascadeClassifier(cascade_2 + cascade_path)
 
     p_list = path_img + 'positive_in_out_aki_tsuji.dat'
     n_list = path_img + 'negative_in_out_aki_tsuji.dat'
@@ -34,7 +34,7 @@ class Detection:
     N_s = sum(1 for line in open(n_list))
     N_file = open(n_list, "r")
     N_f = N_file.readlines()
-    file_lists = glob.glob(path_test + "img/*.jpg")
+    file_lists = glob.glob(path_img + "img/*.jpg")
 
 
     #パラメータ
@@ -64,37 +64,32 @@ class Detection:
         """前処理を行う関数"""
         global img
         img = cv2.imread(file_img, cv2.IMREAD_COLOR)
-        global yAxis
         yAxis = cv2.flip(img, 1)
-        # グレースケール変換
         gray = cv2.cvtColor(yAxis, cv2.COLOR_BGR2GRAY)
-        #横顔を検知
-        faces = sideface_cascade.detectMultiScale(gray, 1.1, 3)
-        #消す
+        faces = self.sideface_cascade.detectMultiScale(gray, 1.1, 3)
         f_name = os.path.splitext(os.path.basename(file_img))[0]
 
         return faces, f_name
 
-    def flag_add(self, fa,　type_p_n):
+    def flag_add(self, fa, type_p_n):
         """顔がある画像を計算する関数"""
         if type_p_n == 0:
             if fa > 0 :
-                global P_P
-                P_P += 1
+                self.P_P += 1
             else:
-                global P_N
-                P_N += 1
+                self.P_N += 1
         elif type_p_n == 1:
             if fa > 0 :
-                global N_P
-                N_P += 1
+                self.N_P += 1
             else:
-                global N_N
-                N_N += 1
+                self.N_N += 1
         else:
             pass
 
-    def face_clips(self, faces, f_n):
+    def face_clips(self, faces, f_n, type_p_n):
+        global fa_p, fa_n
+        fa_p = 0
+        fa_n = 0
         for (x, y, w, h) in faces:
             global img1
             img1 = img[y:y + h,x: x + w]
@@ -102,39 +97,38 @@ class Detection:
                 if w * h > 400 * 400:
                     cv2.imwrite(self.path_dir + self.P_P_dir + f_n + str(fa_p) + "L" + ".jpg", img1)
                     fa_p += 1
-                    return fa_p
                 else:
                     cv2.imwrite(self.path_dir + self.P_P_dir + f_n + str(fa_n) + "l" +  ".jpg", img1)
                     fa_n += 1
             elif type_p_n == 1:
                 if w * h > 400 * 400:
-                    cv2.imwrite(self.path_dir + self.N_P_dir + f_n + str(fa_p2) + "L" + ".jpg", img1)
-                    fa_p2 += 1
-                    return fa_p2
+                    cv2.imwrite(self.path_dir + self.N_P_dir + f_n + str(fa_p) + "L" + ".jpg", img1)
+                    fa_p += 1
                 else:
-                    cv2.imwrite(self.path_dir + self.N_P_dir + f_n + str(fa_n2) + "l" + ".jpg", img1)
-                    fa_n2 += 1
+                    cv2.imwrite(self.path_dir + self.N_P_dir + f_n + str(fa_n) + "l" + ".jpg", img1)
+                    fa_n += 1
+        else:
+            if fa_p > 0:
+                return fa_p
+            else:
+                return 0
 
     def sideface_detect(self):
         """横笑顔検出を行う関数"""
-        for file_list in file_lists:
-            faces, f_name = img_preprocessing(file_list)
+        for file_list in self.file_lists:
+            faces, f_name = self.img_preprocessing(file_list)
             l_in = [s for s in self.P_f if f_name in s]
             if len(l_in) != 0:
-                fa_p = 0
-                fa_n = 0
-                fa_p = face_clips(faces, f_name)
-                flag_add(fa_p,0)
-             else:
-                 l_in = [s for s in N_f if f_name in s]
-                 if len(l_in) != 0:
-                     fa_p2 = 0
-                     fa_n2 = 0
-                     fa_p2 = face_clips(faces)
-                     flag_add(fa_p2,1)
-                 else:
-                     global Dis
-                     Dis += 1
+                fa_pp = self.face_clips(faces, f_name, 0)
+                self.flag_add(fa_pp,0)
+            else:
+                l_in = [s for s in self.N_f if f_name in s]
+                if len(l_in) != 0:
+                    fa_pp2 = self.face_clips(faces, f_name, 1)
+                    self.flag_add(fa_pp2,1)
+                else:
+                    global Dis
+                    self.Dis += 1
     def print_all(self):
         print("All : {0} ".format(len(self.file_lists)))
         print("P_s : {0} ".format(self.P_s))
