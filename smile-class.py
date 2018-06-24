@@ -54,7 +54,7 @@ class Detection:
     N_P_dir = "N_P_0623/"
 
     def dir_exist(self):
-        """ディレクトリ存在確認"""
+        """ディレクトリ存在確認する関数"""
         for dir0 in [self.P_P_dir, self.N_P_dir]:
             filepath = self.path_dir + dir0
             if not os.path.exists(filepath):
@@ -87,6 +87,7 @@ class Detection:
             pass
 
     def face_clips(self, faces, f_n, type_p_n):
+        """顔切り取り保存する関数"""
         global fa_p, fa_n
         fa_p = 0
         fa_n = 0
