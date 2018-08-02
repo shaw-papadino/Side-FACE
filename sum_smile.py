@@ -8,58 +8,114 @@ import datetime as dt
 import collections
 import re
 import os
-
+import time
+import glob
 
 
 class hist_smile(Detection):
     def sum_smile(self):
-        sectionPlist = open(self.path_img + "section_positive.txt").readlines()
-        sum_smile_l = []
+
         P_P = 0
         P_N = 0
         N_P = 0
         N_N = 0
-        for i in range(len(self.file_lists) - 30):
-            sum = 0
-            P_in = 0
-            #print("pi")
-            if i % 30 == 0:
-                print(i)
-            for file_list in self.file_lists[0+i:30+i]:
+        imgFileSum = 0
+        # pattern = "(.*)0.1s_" + str(x) + "([0-9]+).jpg"
+        for x in range(1,5):
+            imgFile = glob.glob(self.path_img + "img_nama/0.1s_"+ str(x) + "/*.jpg")
+            pattern = "(.*?)_([0-9]+).jpg"
+            m_list = []
+            imgFile2 = []
+            for i in imgFile:
+                # print(i)
+                m = re.search(pattern, i)
+                n = m.group(1)
+                m = m.group(2)
+                # print(n)
+                # print(m)
+                m_list.append(m)
+            m_list = sorted(m_list, key = int)
 
-                flg, img, img_file_name = face_square_clips(self.cascade, file_list, self.m_size)
-                if flg == True:
-                    sum += 1
-                    # print(sum)
-            for s in sectionPlist:
-                s = s.split("-")
-                # print(s[0])
-                if i == int(s[0]):
-                    P_in += 1
-                    print(P_in)
+            for i in m_list:
+                i = n + "_" + str(i) + ".jpg"
+                # print(i)
+                imgFile2.append(i)
+            imgFileSum += len(imgFile2)
+            # print(imgFileSum)
+            sectionPlist = open(self.path_img + "section_positive_01s_" + str(x) + ".txt").readlines()
+            # print(imgFile)
+            for i in range(len(imgFile2) - 30):
+                sum = 0
+                P_in = 0
+                #print("pi")
+                if i % 30 == 0:
+                    print(i)
+                for file_list in imgFile2[0+i:30+i]:
+                    # print(file_list)
+                    flg, img, img_file_name = face_square_clips(self.cascade, file_list, self.m_size)
+                    if flg == True:
+                        sum += 0.1
+                        # print(sum)
+                for s in sectionPlist:
+                    s = s.split("-")
+                    # print(s[0])
+                    if i == int(s[0]):
+                        P_in += 1
+                        # print(P_in)
 
-            if P_in != 0 and sum >= 15: # default = 20
-                P_P += 1
-                print(P_P)
-            elif P_in == 0 and sum < 15:
-                N_N += 1
-            elif P_in != 0 and sum < 15:
-                P_N += 1
-            elif P_in == 0 and sum >= 15:
-                N_P += 1
-            sum_smile_l.append(sum)
-        result_d = {"ALL": len(self.file_lists) - 30,"P_P": P_P, "P_N": P_N, "N_P": N_P, "N_N": N_N}
+                if P_in != 0 and sum >= 2: # default = 20
+                    P_P += 1
+                    print("P_P:{0}".format(P_P))
+                elif P_in == 0 and sum < 2:
+                    N_N += 1
+                    # print("N_N:{0}".format(N_N))
+                elif P_in != 0 and sum < 2:
+                    P_N += 1
+                    print("P_N:{0}".format(P_N))
+                elif P_in == 0 and sum >= 2:
+                    N_P += 1
+                    print("N_P:{0}".format(N_P))
+            # sum_smile_l.append(round(sum))
+            # sum_smile_float.append(float(sum))
+            # c_f = collections.Counter(sum_smile_float)
+            # sum_smile_int.append(round(sum))
+            # c_i = collections.Counter(sum_smile_int)
+        result_d = {"ALL": imgFileSum - 120,"P_P": P_P, "P_N": P_N, "N_P": N_P, "N_N": N_N}
         for key, value in result_d.items():
             print("key:", key, "-- value:", str(value))
+        # return sum_smile_int, c_i, sum_smile_float, c_f
 
 
     def create_section_positive(self):
-        f = open("./section_positive.txt", mode='w')
-        f_n = open("./section_negative.txt", mode='w')
-        for i in range(len(self.file_lists) - 30):
+
+        f = open(self.path_img + "section_positive_01s_4.txt", mode='w')
+        f_n = open(self.path_img + "section_negative_01s_4.txt", mode='w')
+        imgFile2 = []
+        imgFile = glob.glob(self.path_img + "img_nama/0.1s_4/*.jpg")
+        pattern = "(.*?)_([0-9]+).jpg"
+        m_list = []
+        for i in imgFile:
+            # print(i)
+            m = re.search(pattern, i)
+            n = m.group(1)
+            m = m.group(2)
+            # print(n)
+            # print(m)
+            m_list.append(m)
+        m_list = sorted(m_list, key = int)
+
+        for i in m_list:
+            i = n + "_" + str(i) + ".jpg"
+            # print(i)
+            imgFile2.append(i)
+
+        # b = sorted(glob.glob(self.path_img + "img_nama/0.1s_2/*.jpg"))
+        # c = sorted(glob.glob(self.path_img + "img_nama/0.1s_3/*.jpg"))
+        # d = sorted(glob.glob(self.path_img + "img_nama/0.1s_4/*.jpg"))
+        for i in range(len(imgFile2) - 30):
             sum = 0
             pinSection = 0
-            for file_list in self.file_lists[0+i:30+i]:
+            for file_list in imgFile2[0+i:30+i]:
                 f_name = os.path.splitext(os.path.basename(file_list))[0]
                 # print("f_name" + f_name)
                 for s in self.P_l:
@@ -79,30 +135,41 @@ class hist_smile(Detection):
                 f_n.write(s)
 
 
-    def write_histgrum(self, time_s, flg, c):
+    def write_histgrum(self, ts_i, c_i, ts_f , c_f, flg):
         fp = FontProperties(fname = "/Users/okayama/Library/Fonts/ipaexg.ttf")
         fig = plt.figure()
-        ax = fig.add_subplot(1,1,1)
+        ax1 = fig.add_subplot(1,2,1)
         if flg == "time":
             c_v = [k for k in c.values()]
             c_k = [k for k in c]
-            ax.hist(time_s,bins=len(c_k))#int(max(s_s_l))
-            ax.set_xlabel(u"笑い秒/回", fontproperties = fp)
-            ax.set_ylabel(u"回数", fontproperties = fp)
-            ax.set_ylim(0,max(c_v)+1)
-            ax.set_title(u"笑い平均時間分布", fontproperties = fp)
+            ax1.hist(time_s,bins=len(c_k))#int(max(s_s_l))
+            ax1.set_xlabel(u"笑い秒/回", fontproperties = fp)
+            ax1.set_ylabel(u"回数", fontproperties = fp)
+            ax1.set_ylim(0,max(c_v)+1)
+            ax1.set_title(u"笑い平均時間分布", fontproperties = fp)
         else:
-            ax.hist(time_s_t,bins=len(time_s))#int(max(s_s_l))
-            ax.set_xlabel(u"区間内笑い回数", fontproperties = fp)
-            ax.set_ylabel(u"回数", fontproperties = fp)
-            ax.set_ylim(0,max(time_s))
-            ax.set_title(u"区間内笑い平均時間分布", fontproperties = fp)
+            ax2 = fig.add_subplot(1,2,2)
+            c_v_i = [k for k in c_i.values()]
+            c_k_i = [k for k in c_i]
+            ax1.hist(ts_i,bins=len(c_k_i))#int(max(s_s_l))
+            ax1.set_xlabel(u"区間内笑い回数", fontproperties = fp)
+            ax1.set_ylabel(u"回数", fontproperties = fp)
+            ax1.set_ylim(0,max(c_v_i)+1)
+            ax1.set_title(u"区間内笑い平均時間分布", fontproperties = fp)
+            c_v_f = [k for k in c_f.values()]
+            c_k_f = [k for k in c_f]
+            ax2.hist(ts_f,bins=len(c_k_f))
+            ax2.set_xlabel(u"区間内笑い回数", fontproperties = fp)
+            ax2.set_ylabel(u"回数", fontproperties = fp)
+            ax2.set_ylim(0,max(c_v_f)+1)
+            ax2.set_title(u"区間内笑い平均時間分布", fontproperties = fp)
         plt.show()
 
 
     def hist_time(self):
         sum = 0
-        time_smile = []
+        time_smile_int = []
+        time_smile_float = []
         pattern = "(.*)_(.*)"
         list_sect = [352, 1900, 1914, 3730, 4660]
         f = open("./short_smile(0.4).txt", mode='w')
@@ -146,8 +213,8 @@ class hist_smile(Detection):
                     sum += 0.1
                     print("{0:.2}".format(sum))
                 else:
-                    time_smile.append(round(sum))
-                    # time_smile.append(float(sum))
+                    time_smile_int.append(round(sum))
+                    time_smile_float.append(float(sum))
                     # print(time_smile)
                     if sum < 0.41 and sum > 0.32:
                         s = str(sum) + " " + str(p_img[0]) + "\n"
@@ -215,17 +282,20 @@ class hist_smile(Detection):
                     print(time_smile)
                     sum = 0
                 '''
-        c = collections.Counter(time_smile)
-        print(c)
-        return time_smile , c
+        c_int = collections.Counter(time_smile_int)
+        c_float = collections.Counter(time_smile_float)
+        # print(c)
+        return time_smile_int , c_int, time_smile_float, c_float
 
 
 if __name__ == "__main__":
     h = hist_smile()
 
-    # s_s_l = h.sum_smile()#section
-    # h.write_histgrum(s_s_l)
-    h.sum_smile()
+    # ts_i, c_i, ts_f, c_f = h.sum_smile()#section
+    # h.write_histgrum(ts_i, c_i, ts_f, c_f, "section")
     # h.create_section_positive()
+    # time.sleep(5)
+    h.sum_smile()
+
     # t_smile, c = h.hist_time()#time
     # h.write_histgrum(t_smile, "time", c)
