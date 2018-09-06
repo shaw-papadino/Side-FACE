@@ -17,7 +17,7 @@ class face_recognizer() :
         # path = "../201804280930/"
         # cascade = "cascade/0629_neo/cascade.xml"
         # self.cascade = cv.CascadeClassifier(path + cascade)
-        self.face_cascade = cv.CascadeClassifier('haarcascade_frontalface_default.xml')
+        self.face_cascade = cv.CascadeClassifier('../haarcascades/haarcascade_frontalface_default.xml')
         self.path = "./201804280930/05_8/"
     #　opencv をつかって、顔を見つけて、1つ目の顔の位置を返す関数, detect_face
     def detect_face(self,img):

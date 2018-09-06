@@ -9,35 +9,6 @@ from face_square_clips import face_square_clips
 from dir_exists import dir_exists
 class Detection:
     """横側からの笑顔を検出する"""
-    #path = "/Users/okayamashoya/NeoTrainingAssistant/static/img_dst/"
-    #path_img = path + "201804280930/"
-    #path_test = path + "20180627231810/"
-
-    # 1層目の検出器 "201804280930/"
-    #first_cascade_path = path + "201804280930/"
-    # 2層目の検出器
-    # cascade_2 = path + "201805071842/"
-    # カスケード'cascade/lbp_in_out_aki_tsuji/cascade.xml'
-    #first_cascade_path = '201804280930/cascade/lbp/cascade.xml'
-    # 検出器読み込み
-    #sideface_cascade = cv2.CascadeClassifier(path + first_cascade_path)
-    # second_cascade = cv2.CascadeClassifier(cascade_2 + cascade_path)
-
-    #パラメータ
-    #実際_認識
-    # P_P = 0
-    # P_N = 0
-    # N_N = 0
-    # N_P = 0
-    # Dis = 0
-    # noise = 0
-
-    #画像入れ込み
-    # path_dir = path + "img_croppy/"
-    # noise_dir = "noise0612/"
-    # P_N_dir = "P_N_3800_test/"
-    # P_P_dir = "P_P_3800_test/"
-    # N_P_dir = "N_P_3800_test/"
 
     def __init__(self, path = "./201804280930/",cascade = "cascade/0629_neo/cascade.xml", m_size = 450):#"cascade/0629_neo/cascade.xml"
         self.path_img = path
