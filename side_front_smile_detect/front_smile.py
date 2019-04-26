@@ -10,25 +10,26 @@ from dir_exists import dir_exists
 class Detection:
     """横側からの笑顔を検出する"""
 
-    def __init__(self, path = "./201804280930/",cascade = "cascade/0629_neo/cascade.xml", m_size = 450):#"cascade/0629_neo/cascade.xml"
+    def __init__(self, path = "./frontpictest/",cascade = "haarcascade_smile.xml"):#, m_size = 450):#"cascade/0629_neo/cascade.xml"
         self.path_img = path
-        self.file_lists = sorted(glob.glob(self.path_img + "img_nama/*.jpg"))
-        self.p_list = self.path_img + "positive_1_addshort.dat"#通常はpositive_1.dat
-        self.n_list = self.path_img + "negative_2.dat"
+        self.file_lists = sorted(glob.glob(self.path_img + "img/*.jpg"))
+        # self.p_list = self.path_img + "positive_1_addshort.dat"#通常はpositive_1.dat
+        # self.n_list = self.path_img + "negative_2.dat"
         self.cascade = cv2.CascadeClassifier(path + cascade)
+        self.cascade2 = cv2.CascadeClassifier(path + "haarcascade_frontalface_default.xml")
         # 0
-        # self.filepath_list = dir_exists(path, str(datetime.now().time()) + str(m_size))
+        self.filepath_list = dir_exists(path, str(datetime.now().time()))
 
         # Positive数読み込み
-        self.P_s= sum(1 for line in open(self.p_list))
-        self.P_f = open(self.p_list, 'r')
-        self.P_l = self.P_f.readlines()
+        # self.P_s= sum(1 for line in open(self.p_list))
+        # self.P_f = open(self.p_list, 'r')
+        # self.P_l = self.P_f.readlines()
 
         # Negative数読み込み
-        self.N_s = sum(1 for line in open(self.n_list))
-        self.N_f = open(self.n_list, "r")
-        self.N_l = self.N_f.readlines()
-        self.m_size = m_size
+        # self.N_s = sum(1 for line in open(self.n_list))
+        # self.N_f = open(self.n_list, "r")
+        # self.N_l = self.N_f.readlines()
+        # self.m_size = m_size
 
     def check_detection_sideface(self):
         """検出が正しいのか確認を行う関数"""
@@ -38,9 +39,19 @@ class Detection:
         N_N = 0
         exc = 0
         for file_list in self.file_lists:
-            flg, img, img_file_name = face_square_clips(self.cascade, file_list, self.m_size)
-            P_in = 0
-            N_in = 0
+            # print(file_list)
+            flg, img, img_file_name = face_square_clips(self.cascade,self.cascade2, file_list)#, self.m_size)
+            # print(flg)
+            # P_in = 0
+            # N_in = 0
+            if flg == True:
+                P_P += 1
+                cv2.imwrite(self.filepath_list[0] + "/" + img_file_name + ".jpg", img)
+            else:
+                N_N += 1
+                cv2.imwrite(self.filepath_list[1] + "/" + img_file_name + ".jpg", img)
+
+            """
             for s in self.P_l:
                 s = s.replace("img/", "").replace(".jpg", "")
                 s = s.split(" ")
@@ -78,7 +89,8 @@ class Detection:
                         N_N += 1
                 else:
                     exc += 1
-        result_d = {"ALL": len(self.file_lists), "P_s": self.P_s, "N_s": self.N_s, "P_P": P_P, "P_N": P_N, "N_P": N_P, "N_N": N_N, "EXC": exc, "Size": self.m_size}
+                    """
+        result_d = {"ALL": len(self.file_lists), "P_P": P_P, "P_N": P_N, "N_P": N_P, "N_N": N_N, "EXC": exc}
         for key, value in result_d.items():
             print("key:", key, "-- value:", str(value))
 
