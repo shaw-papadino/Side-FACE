@@ -6,25 +6,24 @@ Smile-camera_v2
 - todo:CNNモデルを追記
 - todo:
 
-
 1. demoディレクトリにUSBカメラとラズパイカメラが接続されたRaspberryPiを用いて、同時に動画撮影を行うプログラムがあります。
 
   OUTPUT1 -> 1 横顔動画
   2 周囲状況動画
 
-2. ffmpegで[o1-1]を、フレーム毎に画像として保存する
+1. ffmpegで[o1-1]を、フレーム毎に画像として保存する
 
   OUTPUT2 -> 横顔画像
 
-3. アノテーションツールを用いて、[o2]の笑顔部分にバウンディングボックスを付け記録
+1. アノテーションツールを用いて、[o2]の笑顔部分にバウンディングボックスを付け記録
 
   OUTPUT3 -> 1 positive.dat(ファイル名とバウンディングボックスの座標)
   2 negative.dat(ファイル名)
   ※のちにサンプルとして追加予定
              
-4. positive画像にData augmentationを行い、増やした画像を[o3-1]に追記
+1. positive画像にData augmentationを行い、増やした画像を[o3-1]に追記
 
-5. opencv_createsample, opencv_traincascadeで識別器作成
+1. opencv_createsample, opencv_traincascadeで識別器作成
 
   OUTPUT -> models/side_smile_default_ver1.xml
   adaboost
@@ -33,6 +32,6 @@ Smile-camera_v2
   適合率70.9%
   ※CNNモデルも追加予定
             
-6. detection/side_smile.pyで識別を行う
+1. detection/side_smile.pyで識別を行う
 
-7. detection/cut_video.pyで笑顔区間を算出し、[o1-2]から切り取り保存を行う。
+1. detection/cut_video.pyで笑顔区間を算出し、[o1-2]から切り取り保存を行う。
