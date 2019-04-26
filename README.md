@@ -10,7 +10,7 @@ Smile-camera_v2
         1. 横顔動画  
         1. 周囲状況動画
 
-1. ffmpegで[oi-a]を、フレーム毎に画像として保存する
+1. ffmpegで[o1-a]を、フレーム毎に画像として保存する
     1. OUTPUT2 -> 
         1. 横顔画像
 
@@ -20,7 +20,7 @@ Smile-camera_v2
         1. negative.dat(ファイル名)  
     ※のちにサンプルとして追加予定
              
-1. positive画像にData augmentationを行い、増やした画像を[o3-1]に追記
+1. positive画像にData augmentationを行い、増やした画像を[o3-a]に追記
 
 1. opencv_createsample, opencv_traincascadeで識別器作成
     1. OUTPUT -> - models/side_smile_default_ver1.xml
@@ -32,4 +32,4 @@ Smile-camera_v2
             
 1. detection/side_smile.pyで識別を行う
 
-1. detection/cut_video.pyで笑顔区間を算出し、[o1-2]から切り取り保存を行う。
+1. detection/cut_video.pyで笑顔区間を算出し、[o1-b]から切り取り保存を行う。
