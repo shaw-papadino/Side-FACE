@@ -8,7 +8,7 @@ import os
 
 from timeit import default_timer as timer
 from threading import (Event, Thread)
-import getch
+# import getch
 
 # event = Event()
 # now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')

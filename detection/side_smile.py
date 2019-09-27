@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import argparse
+import re
 from datetime import datetime
 from face_square_clips import face_square_clips
 from dir_exists import dir_exists
@@ -16,7 +17,7 @@ class Detection:
     def __init__(self, path, cascade, m_size):#"cascade/mizumashi15/cascade.xml"
         self.path = path
         self.path_img = self.path + "img/"
-        self.file_lists = sorted(glob.glob(self.path_img + "*.jpg"))
+        self.file_lists = sorted(glob.glob(self.path + "/*.jpg"))
         self.cascade = cv2.CascadeClassifier("../models/" + cascade)
         self.datlists = glob.glob(self.path + "*.dat")
         self.m_size = m_size
@@ -27,9 +28,9 @@ class Detection:
             for dat in self.datlists:
                 match = re.search(pattern , dat)
                 if match:
-                    self.t_list = self.path + dat
+                    self.t_list = dat
                 else:
-                    self.f_list = self.path + dat
+                    self.f_list = dat
 
             #Positive数読み込み
             self.T_s= sum(1 for line in open(self.t_list))
@@ -39,7 +40,7 @@ class Detection:
             #Negative数読み込み
             self.F_s = sum(1 for line in open(self.f_list))
             self.F_f = open(self.f_list, "r")
-            self.F_l = self.N_f.readlines()
+            self.F_l = self.F_f.readlines()
 
             self.filepath_list = dir_exists(self.path, 1)
 
@@ -74,7 +75,7 @@ class Detection:
             T_in = 0
             F_in = 0
 
-            for s in self.P_l:
+            for s in self.T_l:
                 s = s.replace("img/", "").replace(".jpg", "")
                 s = s.split(" ")
                 if img_file_name == s[0]:
@@ -89,7 +90,7 @@ class Detection:
                     cv2.imwrite(self.filepath_list[1] + "/" + img_file_name + ".jpg", img)
             else:
 
-                for s in self.N_l:
+                for s in self.F_l:
                     s = s.replace("img/", "").replace(".jpg", "").replace("\n", "")
                     if img_file_name == s:
                         F_in += 1
@@ -106,7 +107,7 @@ class Detection:
 
         # result_d = {"ALL": len(self.file_lists),"T_P": T_P, "T_F": T_F, "F_T": F_T, "F_F": F_F, "Size": self.m_size}
         result_d = {"ALL": len(self.file_lists), "T_s": self.T_s, "F_s": self.F_s, "T_P": T_P, "F_N": F_N,\
-                    "F_P": F_P, "T_N": T_N, "EXC": exc, "Size": self.m_size, "Precision": T_P/(T_P +F_P), "Recall": T_P/(T_P +F_N)}
+                    "F_P": F_P, "T_N": T_N, "EXC": exc, "Size": self.m_size, "Precision": round(T_P/(T_P +F_P),2), "Recall": round(T_P/(T_P +F_N),2)}
 
         return result_d
 
@@ -114,22 +115,20 @@ class Detection:
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Train sidesmile estimation')
-    parser.add_argument('--path', '-p', type=str, default="./data/test/",
+    parser.add_argument('--path', '-p', type=str, default="../data/nofish/",
                         help='input path')
     parser.add_argument('--cascadepath', '-c', type=str, default="side_smile_default_ver1.xml",
                         help='cascade file')
     parser.add_argument('--mindetectsize', '-m', type=int, default=450,
                         help='minmum detect image size')
-    parser.add_argument('--evaluetion', '-e', type=int, default=1,
+    parser.add_argument('--evaluation', '-e', type=int, default=1,
                         help='evaluation')
     args = parser.parse_args()
 
-    args = parse_args()
-
     sideface = Detection(args.path, args.cascadepath, args.mindetectsize)
     if args.evaluation:
-        result = check_detection_sideface(self)
-        for key, value in result_d.items():
+        result = sideface.check_detection_sideface()
+        for key, value in result.items():
             print("key:", key, "-- value:", str(value))
 
     else:

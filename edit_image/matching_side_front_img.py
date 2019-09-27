@@ -2,12 +2,11 @@ import glob
 import os
 import sys
 import shutil
-
-def matching_side_front_img(path, fileList, pList):#, nList):
-
-    for file in fileList:
-        flg = False
-        fileName = os.path.splitext(os.path.basename(file))[0]
+import datetime
+def matching_side_front_img(path, fileList, pList, writeFileName):#, nList):
+    f = open(path + writeFileName, mode='a')
+    for imagefile in fileList:
+        fileName = os.path.splitext(os.path.basename(imagefile))[0]
         fileName = int(fileName.replace("image_", ""))
 
         for p in pList:
@@ -17,17 +16,14 @@ def matching_side_front_img(path, fileList, pList):#, nList):
             # p = round(((p - 51) / 8) * 9.38) + 26
 
             if fileName == p:
-                flg = True
-                # print("t")
-
+                f.write(imagefile + ", 0\n")
+                break
                 # shutil.copy(file,path)
             else:
                 pass
-        if flg == True:
-            pass
-        else:
-            shutil.copy(file,"/Users/okayamashoya/Downloads/frontpic_negative")
-
+            # shutil.copy(imagefile,"/Users/okayamashoya/Downloads/frontpic_negative")
+        f.write(imagefile + ", 1\n")
+    f.close()
         # for n in nList:
         #
         #     n = n.replace("img/", "").replace(".jpg", "").replace("\n", "")
@@ -39,6 +35,8 @@ def matching_side_front_img(path, fileList, pList):#, nList):
 if __name__ == "__main__":
 
     path = "./frontpictest/"
+    dayName = str(datetime.datetime.now())
+    fileName = dayName + ".txt"
     fileList = sorted(glob.glob(path + "img/*.jpg"))
     pList = path + "positive_front_ver1.dat"
     pOpen = open(pList, "r")
@@ -47,4 +45,4 @@ if __name__ == "__main__":
     # nOpen = open(nList, "r")
     # nList = nOpen.readlines()
 
-    matching_side_front_img(path, fileList,  pList)#, nList)
+    matching_side_front_img(path, fileList,  pList, fileName)#, nList)
