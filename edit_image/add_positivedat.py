@@ -3,76 +3,55 @@ import shutil
 import glob
 import os
 import re
-<<<<<<< HEAD
+import sys
 
-def add_positivedat(path, file):
-
-    filelist = text2lists(path + file)
-    # pList = path + "positive_front_ver2.dat"
-    # pOpen = open(pList, "r")
-    # pListLines = pOpen.readlines()
-
-    imgList = sorted(glob.glob(path + "contp/*.jpg")) + sorted(glob.glob(path + "gammap/*.jpg")) + sorted(glob.glob(path + "blurp/*.jpg"))
-=======
-path = "./20180825/"
-
-def add_positivedat(path):
-
-    pList = path + "positive.dat"
+# ROOT_PATH = "./201804280930/"
+def add_positivedat(path, datfile):
+    """
+    Image Augmentationで追加された画像(元のファイル名に記号追加したファイル名)を
+    ポジティブリストに追加する
+    """
+    
+    # ポジティブリスト読み込み
+    pList = path + datfile + "positive.dat"
     pOpen = open(pList, "r")
     pListLines = pOpen.readlines()
 
-    imgList = sorted(glob.glob(path + "img/*.jpg"))
->>>>>>> 24e74d6c0cff461335e7d1834818aef2a6179b32
+    # 画像読み込み
+    imgList = sorted(glob.glob(path + "positiveImage20191007/*.jpg"))
 
     for i in imgList:
+        # 画像ファイル名取得
         isp = os.path.splitext(os.path.basename(i))[0]
 
-
-<<<<<<< HEAD
-
-        for p in filelist:
-            p = p.split()
-            pp = p[0].replace("img/", "")
-
-            pattern = ".*(\w*_\d*)[lh].*"
-            # pattern = ".*?(\d*?_\d*?)[hl].*"
-            patternp = ".*(\w*_\d*)\.jpg"
-            # patternp = ".*?(\d*?_\d*?).jpg?"
-=======
         for p in pListLines:
+            # ポジティブリストに記載されている画像ファイル名取得
             p = p.split()
             pp = p[0].replace("img/", "")
 
-            pattern = ".*?(\d*?_\d*?)[hl].*"
-            patternp = ".*?(\d*?_\d*?).jpg?"
->>>>>>> 24e74d6c0cff461335e7d1834818aef2a6179b32
+            # print(pp)
+            pattern = ".*?(\d*?)_(\d*?)[hl].*"
+            patternp = ".*?(\d*?)_(\d*?).jpg?"
 
             ire = re.search(pattern, isp)
             pre = re.search(patternp, pp)
 
-<<<<<<< HEAD
-            # print(ire.group(1))
-            # print(pre.group(1))
-            if ire.group(1) == pre.group(1):
-                print("un")
-                with open(pList, mode='a') as f:
-                    f.write("img/" + isp + ".jpg " + p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5] + '\n')
-=======
-            if ire[1] == pre[1]:
-                print("un")
+            if ire is None :
+                    continue
+            # print("ire:{}".format(ire.groups()))
+            # print(pre.groups())
+            if ire.groups()[1] == pre.groups()[1]:
+                # ポジティブリストに追加
                 with open(pList, mode='a') as f:
                     f.write("img/" + isp + ".jpg " + p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5] +  '\n')
->>>>>>> 24e74d6c0cff461335e7d1834818aef2a6179b32
+                break
+
             else:
                 pass
 
-if __name__ == "__main__":
-<<<<<<< HEAD
-    path = "../20190113/"
-    file = "positive_front_ver2.dat"
-    add_positivedat(path, file)
-=======
 
-    add_positivedat(path)
->>>>>>> 24e74d6c0cff461335e7d1834818aef2a6179b32
+if __name__ == "__main__":
+    args = sys.argv
+    path = args[1]
+    datfile = args[2]
+    add_positivedat(path, datfile)

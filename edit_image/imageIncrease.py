@@ -3,8 +3,11 @@ import numpy as np
 import glob
 import os
 from add_positivedat import add_positivedat
-
+import sys
 def contImg(path):
+    """
+    Image Augmentation をする
+    """
 
     # ルックアップテーブルの生成
     min_table = 20
@@ -26,7 +29,7 @@ def contImg(path):
     for i in range(256):
         LUT_LC[i] = min_table + i * (diff_table) / 255
 
-    imgList = sorted(glob.glob(path + "positive_side/*.jpg"))
+    imgList = sorted(glob.glob(path + "positiveImage/*.jpg"))
     for img in imgList:
         # print(img)
         j = os.path.splitext(os.path.basename(img))[0]
@@ -44,7 +47,7 @@ def contImg(path):
 def gammaImg(path):
 
     # ガンマ変換ルックアップテーブル
-    gs = [1.2]
+    gs = [0.8,1.2,1.6]
     LUT_G1 = np.arange(256, dtype = 'uint8' )
 
     for g in gs:
@@ -63,7 +66,7 @@ def gammaImg(path):
             cv.imwrite(path + "gammap/" + j + str(g) +".jpg",gamma_img)
 
 def blurImg(path):
-    xs =  [5]
+    xs =  [1,3,5,7,9]
 
     for x in xs:
         average_square = (x,x)
@@ -79,9 +82,10 @@ def blurImg(path):
             cv.imwrite(path + "blurp/" + j + str(x) + ".jpg",blur_img)
 
 if __name__ == "__main__":
-    path = "../20190113/"
+    args = sys.argv
+    path = args[1]
 
     contImg(path)
     gammaImg(path)
     blurImg(path)
-    add_positivedat(path)
+    # add_positivedat(path)

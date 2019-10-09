@@ -6,12 +6,15 @@ path = "./201804280930"
 
 
 
-def create_positivedat(path, r):
-    pList = path + "positivemizumashi.dat"
+def create_positivedat(path, datfile):
+    """
+    交差検証用のポジティブリスト作成
+    """
+    pList = path + datfile
     pList = open(pList, "r")
     pList = pList.readlines()
 
-    imgList = sorted(glob.glob(path + "M05_" + str(r) + "/P_Train/*.jpg"))
+    imgList = sorted(glob.glob(path + "P_Train/*.jpg"))
 
     for i in imgList:
         isp = os.path.splitext(os.path.basename(i))[0]
@@ -22,41 +25,52 @@ def create_positivedat(path, r):
             print(isp)
             # print(pp)
 
-            patternp = ".*?(\d*?_\d*?[hl]?[\d.\d*]*).jpg?"
+            # patternp = ".*?(\d*?_\d*?[hl]?[\d.\d*]*).jpg?"
+            patternp = ".*?(\d*?_\d*?).jpg?"
             # pattern = ".*?(\d+_\d+[hl]*?[\d.\d*]*)"
             # ire = re.search(pattern, isp)
             pre = re.search(patternp, pp)
 
             # print("ire{0}".format(ire[1]))
-            print(pre[1])
-            if isp == pre[1]:
-                print("un")
-                with open(path + "M05_" + str(r) + "/positive.dat", mode='a') as f:
+            if isp == pre.group():
+                with open(path + "/positive.dat", mode='a') as f:
                     f.write(p)
             else:
                 pass
 
-def create_negativedat(path, r):
-    nList = path + "negative_2c.dat"
+
+def create_negativedat(path, datfile):
+    """
+    交差検証用のネガティブリスト作成
+    """
+
+    nList = path + datfile
     nList = open(nList, "r")
     nList = nList.readlines()
 
-    imgList = sorted(glob.glob(path + "M05_" + str(r) + "/N_Train/*.jpg"))
+    imgList = sorted(glob.glob(path + "N_Train/*.jpg"))
 
     for i in imgList:
         isp = os.path.splitext(os.path.basename(i))[0]
         for n in nList:
             nn = n.replace("img/", "").replace(".jpg", "").replace("\n", "")
 
-            print(nn)
-            print(isp)
             if isp == nn:
-                print("un")
-                with open(path + "M05_" + str(r) + "/negative.dat", mode='a') as f:
+                with open(path + "/negative.dat", mode='a') as f:
                     f.write(n + '\n')
                 break
             else:
                 pass
+
+def create_datfile(path, positivedat, negativedat):
+
+    print("--- writing positivedat ---")
+    create_positivedat(path, positivedat)
+    print("--- finish writing ---")
+
+    print("--- writing negativedat ---")
+    create_negativedat(path, negativedat)
+    print("--- finish writing ---")
 
 if __name__ == "__main__":
 

@@ -1,20 +1,31 @@
 import shutil
 import random
 import glob
+import datetime
+import os
 
 def move_img(path):
-    filepathP = path + "/P_Test"
-    filepathN = path + "/N_Test"
+    """
+    ランダムに画像を分ける
+    """
+    filepathP = path + "Positive"
+    filepathN = path + "Negative"
     fileListP = sorted(glob.glob(filepathP + "/*.jpg"))
     fileListN = sorted(glob.glob(filepathN + "/*.jpg"))
+
+    now = datetime.datetime.now()
+    time_seed = now.timestamp()
+    random.seed(time_seed)
 
     fileListRandomP = random.sample(fileListP, round(len(fileListP) * 0.5))
     fileListRandomN = random.sample(fileListN, round(len(fileListN) * 0.5))
 
-    for i in fileListRandomP:
+    if not os.path.exists(path + "P_Train/"):
+        os.makedirs(path + "P_Train/")
+    if not os.path.exists(path + "N_Train/"):
+        os.makedirs(path + "N_Train/")
 
-        shutil.move(i, path + "/P_Train")
+    for (p,n) in zip(fileListRandomP, fileListRandomN):
 
-    for i in fileListRandomN:
-
-        shutil.move(i, path + "/N_Train")
+        shutil.move(p, path + "P_Train/")
+        shutil.move(n, path + "N_Train/")
