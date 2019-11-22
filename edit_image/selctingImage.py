@@ -21,7 +21,6 @@ def selctingImage(path, datfile):
         move_img(path)
         print("テスト画像合体")
         combine_img(path, "Positive", "Negative", "TestImg")
-        """
         
         print("datfileを作成")
         create_datfile(path, positivedat, negativedat)
@@ -32,7 +31,7 @@ def selctingImage(path, datfile):
         print("トレーニング画像を合体")
         combine_img(path, "P_Train", "N_Train", "TrainImg")
 
-
+        """
         print("識別器作成開始")
         command = ["./create_cascade.sh", path]
         subprocess.Popen(command)

@@ -17,10 +17,12 @@ def combine_img(path, org_dir_name_1, org_dir_name_2, new_dir_name):
     time_seed = now.timestamp()
     random.seed(time_seed)
 
-    for (p,n) in zip(fileListP, fileListN) :
-        if not os.path.exists(path + new_dir_name):
-                os.makedirs(path + new_dir_name)
+    if not os.path.exists(path + new_dir_name):
+            os.makedirs(path + new_dir_name)
+    for p in fileListP :
 
         shutil.move(p, path + new_dir_name)
+
+    for n in fileListN :
         shutil.move(n, path + new_dir_name)
 

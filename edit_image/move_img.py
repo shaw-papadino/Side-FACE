@@ -22,10 +22,14 @@ def move_img(path):
 
     if not os.path.exists(path + "P_Train/"):
         os.makedirs(path + "P_Train/")
+
+    for p in fileListRandomP:
+
+        shutil.move(p, path + "P_Train/")
+
     if not os.path.exists(path + "N_Train/"):
         os.makedirs(path + "N_Train/")
 
-    for (p,n) in zip(fileListRandomP, fileListRandomN):
+    for n in fileListRandomN:
 
-        shutil.move(p, path + "P_Train/")
         shutil.move(n, path + "N_Train/")

@@ -5,38 +5,39 @@ import shutil
 
 def sorting_imagefile(path, datfile):
 
-    fileList = sorted(glob.glob(path + "20191007_trimed/*.jpg"))
+    fileList = sorted(glob.glob(path + "/*.jpg"))
 
-    pList = path + datfile + "positive.dat"
+    pList = datfile + "/positive.dat"
     pOpen = open(pList, "r")
     pList = pOpen.readlines()
-    nList = path + datfile + "negative.dat"
+    nList = datfile + "/negative.dat"
     nOpen = open(nList, "r")
     nList = nOpen.readlines()
 
+    print(fileList)
     for file in fileList:
         fileName = os.path.splitext(os.path.basename(file))[0]
-        for p in pList:
-            p = p.replace("img/", "").replace(".jpg", "")
+        for pimg in pList:
+            p = pimg.replace("img/", "").replace(".jpg", "")
             p = p.split(" ")
 
             if fileName == p[0]:
-                if not os.path.exists(path + "positiveImage/"):
-                    os.makedirs(path + "positiveImage/")
-                shutil.copy(file, path + "positiveImage/")
+                if not os.path.exists("../data/positiveImage/"):
+                    os.makedirs("../data/positiveImage/")
+                shutil.copy(file, "../data/positiveImage/")
 
-        for n in nList:
-            n = n.replace("img/", "").replace(".jpg", "").replace("\n", "")
+        for nimg in nList:
+            n = nimg.replace("img/", "").replace(".jpg", "").replace("\n", "")
             if fileName == n:
-                if not os.path.exists(path + "negativeImage/"):
-                    os.makedirs(path + "negativeImage/")
-                shutil.copy(file, path + "negativeImage/")
+                if not os.path.exists("../data/negativeImage/"):
+                    os.makedirs("../data/negativeImage/")
+                shutil.copy(file, "../data/negativeImage/")
 
 if __name__ == "__main__":
 
     args = sys.argv
     path = args[1]
     datfile = args[2]
-    
+    print(path)
 
     sorting_imagefile(path, datfile)
