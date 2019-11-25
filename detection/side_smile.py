@@ -10,13 +10,14 @@ import re
 from datetime import datetime
 from face_square_clips import face_square_clips
 from dir_exists import dir_exists
+from write_point import write_point
 
 class Detection:
     """横側からの笑顔を検出する"""
 
     def __init__(self, path, cascade, m_size, flg):#"cascade/mizumashi15/cascade.xml"
         self.path = path
-        self.path_img = self.path# + "img/"
+        self.path_img = self.path + "img/"
         self.file_lists = sorted(glob.glob(self.path_img + "*.jpg"))
         self.cascade = cv2.CascadeClassifier("../models/" + cascade)
         self.datlists = glob.glob(self.path + "*.dat")
@@ -75,10 +76,10 @@ class Detection:
 
             match = re.search(pattern, file_list)
             
-            if not match :
+            if match :
                 continue
 
-            flg, img, img_file_name = face_square_clips(self.cascade, file_list, self.m_size)
+            flg, img, img_file_name, points = face_square_clips(self.cascade, file_list, self.m_size)
             T_in = 0
             F_in = 0
 
@@ -88,14 +89,14 @@ class Detection:
                 if img_file_name == s[0]:
                     T_in = 1
                     break
-            print(file_list)
+            # print(file_list)
             if T_in != 0:
                 if flg == True:
                     T_P += 1
-                    cv2.imwrite(self.filepath_list[0] + "/" + img_file_name + ".jpg", img)
+                    # cv2.imwrite(self.filepath_list[0] + "/" + img_file_name + ".jpg", img)
                 else:
                     F_N += 1
-                    cv2.imwrite(self.filepath_list[1] + "/" + img_file_name + ".jpg", img)
+                    # cv2.imwrite(self.filepath_list[1] + "/" + img_file_name + ".jpg", img)
             else:
 
                 for s in self.F_l:
@@ -107,9 +108,10 @@ class Detection:
                     if flg == True:
                         F_P += 1
                         cv2.imwrite(self.filepath_list[2] + "/" + img_file_name + ".jpg", img)
+                        write_point(img_file_name, points)
                     else:
                         T_N += 1
-                        #cv2.imwrite(self.filepath_list[3] + "/" + img_file_name + ".jpg", img)
+                        cv2.imwrite(self.filepath_list[3] + "/" + img_file_name + ".jpg", img)
                 else:
                     exc += 1
         print(T_P,F_N)
