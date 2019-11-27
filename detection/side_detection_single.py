@@ -8,12 +8,18 @@ import datetime
 
 from match_keypoint import *
 
-fps = ""
+fpstext = ""
 framecount = 0
 time1 = 0
 time2 = 0
+frame = 0
+match_points = []
+fps_list = []
 
 def make_status_bar(count):
+    """
+    認識数をステータスバーに表示する
+    """
 
     maxcount = 10
     bar  = count*"@" + (maxcount - count)*" "
@@ -21,12 +27,18 @@ def make_status_bar(count):
     return text
 
 def write_status_bar(count):
+    """
+    ステータスバーを標準出力に書き込み
+    """
 
     text = make_status_bar(count)
     sys.stdout.write(text)
     sys.stdout.flush()
 
 def crop_image(image, object_areas):
+    """
+    認識した部分をクロップした画像を返す
+    """
     if isinstance(object_areas, tuple):
         return []
     # img[y: y + h, x: x + w]
@@ -36,10 +48,13 @@ def crop_image(image, object_areas):
 def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
 
     """csvへの記載をどうするか"""
-    global fps
+    global fpstext
     global framecount
     global time1
     global time2
+    global frame
+    global match_points
+    global fps_list 
 
     cam = cv2.VideoCapture(usbcam)
     cam.set(cv2.CAP_PROP_FPS, vidfps)
@@ -52,11 +67,13 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
     W = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
     # 高さ
     H = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    out = cv2.VideoWriter(filename + ".avi",fourcc, vidfps, (W, H))
+    out = cv2.VideoWriter("../result/" + filename + ".avi",fourcc, vidfps, (W, H))
+
     prev_areas = ()
     prev_keypoint = []
     prev_description = []
     # nodetect_count = 0
+
     while True:
         t1 = time.perf_counter()
         
@@ -79,7 +96,7 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
         
         cropimage = crop_image(img, result_areas)
 
-        imdraw = overlay_on_image(img, result_areas, camera_width, fps)
+        imdraw = overlay_on_image(img, result_areas, camera_width, fpstext)
         if isinstance(cropimage, list):
             pass
         else:
@@ -98,6 +115,7 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
                 # matching
                 previmg_points, nextimg_points, matching_list = match_keypoint(prev_keypoint, keypoint, prev_description, description)
                 print("match:{}".format(len(previmg_points)))
+                match_points.append(previmg_points)
                 prev_keypoint = keypoint
                 prev_description = description
 
@@ -109,15 +127,19 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
         # FPS calculation
         framecount += 1
         if framecount >= 15:
-            fps       = "(Playback) {:.1f} FPS".format(time1/15)
+            fps = (time1/15)
+            fps_list.append(fps)
+            fpstext = "(Playback) {:.1f} FPS".format(fps)
             framecount = 0
             time1 = 0
             time2 = 0
+
         t2 = time.perf_counter()
         elapsedTime = t2-t1
         time1 += 1/elapsedTime
         time2 += elapsedTime
 
+        frame += 1
         """
         write_status_bar(detectcount)
         if framecount % 9 == 0:
@@ -147,7 +169,7 @@ def detection(img, cascade, minsize):
     
     return ans
 
-def overlay_on_image(frames, object_areas, camera_width, fps):
+def overlay_on_image(frames, object_areas, camera_width, fpstext):
     """
     "
     "
@@ -165,7 +187,7 @@ def overlay_on_image(frames, object_areas, camera_width, fps):
     label_text_color = (255, 255, 255)
 
     img = frames
-    cv2.putText(img_cp, fps,(camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
+    cv2.putText(img, fpstext,(camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
 
     if isinstance(object_areas, tuple):
         return img
@@ -176,7 +198,7 @@ def overlay_on_image(frames, object_areas, camera_width, fps):
 
         img_cp = img.copy()
 
-        cv2.putText(img_cp, fps,(camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
+        # cv2.putText(img_cp, fpstext,(camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
         # text = make_status_bar(detectcount)
         # cv2.putText(img_cp, text,(camera_width-170,45), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
 
@@ -227,10 +249,16 @@ if __name__=="__main__":
         capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize)
 
     finally:
-        filename = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        with open(filename + ".csv", "w") as f:
+        filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        # 平均fpsを算出
+        fps_ave = sum(fps_list) / len(fps_list)
+        with open("../result/" + filename + ".csv", "w") as f:
             writer = csv.writer(f, lineterminator="\n") # 改行コード（\n）を指定しておく
 
-            writer.writerow(["frames","detects"])
-            writer.writerow([0,0])
-            writer.writerows(detectcounts)
+            writer.writerow(["frames","matchpoint",round(fps_ave,2)])
+            # frameのリスト作成
+            frame_list = list(range(frame))
+            # frame, matchpointを書き込み
+            for (frame, point) in zip(frame_list, match_points):
+
+                writer.writerow([frame, len(point)])
