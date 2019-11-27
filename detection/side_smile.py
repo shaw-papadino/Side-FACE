@@ -17,7 +17,7 @@ class Detection:
 
     def __init__(self, path, cascade, m_size, flg):#"cascade/mizumashi15/cascade.xml"
         self.path = path
-        self.path_img = self.path + "img/"
+        self.path_img = self.path #+ "img/"
         self.file_lists = sorted(glob.glob(self.path_img + "*.jpg"))
         self.cascade = cv2.CascadeClassifier("../models/" + cascade)
         self.datlists = glob.glob(self.path + "*.dat")
@@ -53,14 +53,14 @@ class Detection:
         P = 0
         N = 0
         for file_list in self.file_lists:
-            print(file_list)
-            flg, img, img_file_name = face_square_clips(self.cascade, file_list, self.m_size)
+            flg, img, img_file_name, points = face_square_clips(self.cascade, file_list, self.m_size)
             if flg == True:
                 P += 1
-                cv2.imwrite(self.filepath_list[0] + "/" + img_file_name + ".jpg", img)
+                # cv2.imwrite(self.filepath_list[0] + "/" + img_file_name + ".jpg", img)
+                write_point(img_file_name, points)
             else:
                 N += 1
-                cv2.imwrite(self.filepath_list[1] + "/" + img_file_name + ".jpg", img)
+                # cv2.imwrite(self.filepath_list[1] + "/" + img_file_name + ".jpg", img)
 
         return P, N
 

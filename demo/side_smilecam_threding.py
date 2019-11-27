@@ -38,7 +38,7 @@ def side_rec():
 
 def main(fisheye_path, mov_path):
 
-	cap = cv2.VideoCapture(0) #引数はカメラのデバイス番号
+	cap = cv2.VideoCapture(1) #引数はカメラのデバイス番号
 	fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 	if cap.isOpened() == False:
 		print("Not connected!")

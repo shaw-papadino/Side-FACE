@@ -31,14 +31,17 @@ def match_keypoint(prevkp, nextkp, prevdes, nextdes):
     previmg_points = []
     nextimg_points = []
     if matches:
-        for m,n in matches:
+        if len(matches[0]) > 1:
+            for m,n in matches:
 
-            distance_list.append(m.distance)
+                distance_list.append(m.distance)
 
-            if m.distance < ratio * n.distance:
-                matching_list.append([m])
-                previmg_points.append(list(map(int, prevkp[m.queryIdx].pt)))
-                nextimg_points.append(list(map(int, nextkp[m.trainIdx].pt)))
+                if m.distance < ratio * n.distance:
+                    matching_list.append([m])
+                    previmg_points.append(list(map(int, prevkp[m.queryIdx].pt)))
+                    nextimg_points.append(list(map(int, nextkp[m.trainIdx].pt)))
+        else:
+            pass
     else:
         pass
 

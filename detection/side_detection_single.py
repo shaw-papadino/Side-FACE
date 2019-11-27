@@ -5,12 +5,13 @@ import time
 from time import sleep
 import csv
 import datetime
+
+from match_keypoint import *
+
 fps = ""
 framecount = 0
 time1 = 0
 time2 = 0
-detectcount = 0
-detectcounts = []
 
 def make_status_bar(count):
 
@@ -25,11 +26,18 @@ def write_status_bar(count):
     sys.stdout.write(text)
     sys.stdout.flush()
 
+def crop_image(image, object_areas):
+    if isinstance(object_areas, tuple):
+        return []
+    # img[y: y + h, x: x + w]
+    for (x, y, w, h) in object_areas:
+        return image[y:y+h, x:x+w]
+
 def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
 
+    """csvへの記載をどうするか"""
     global fps
     global framecount
-    global detectcount
     global time1
     global time2
 
@@ -45,6 +53,10 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
     # 高さ
     H = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
     out = cv2.VideoWriter(filename + ".avi",fourcc, vidfps, (W, H))
+    prev_areas = ()
+    prev_keypoint = []
+    prev_description = []
+    # nodetect_count = 0
     while True:
         t1 = time.perf_counter()
         
@@ -53,10 +65,44 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
             continue
 
         result_areas = detection(img, cascade, minsize)
+        if isinstance(result_areas, tuple) and isinstance(prev_areas, tuple):
+            pass
+
+        elif isinstance(prev_areas, tuple):
+            prev_areas = result_areas
+
+        elif isinstance(result_areas, tuple):
+            result_areas = prev_areas
+        else:
+            prev_areas = result_areas
+            
+        
+        cropimage = crop_image(img, result_areas)
 
         imdraw = overlay_on_image(img, result_areas, camera_width, fps)
+        if isinstance(cropimage, list):
+            pass
+        else:
+            keypoint, description = detect_keypoint(cropimage)
+            if keypoint == [] and prev_keypoint  == []:
+                pass
+
+            elif prev_keypoint  == []:
+                prev_keypoint = keypoint
+                prev_description = description
+            
+            elif keypoint  == []:
+                keypoint = prev_keypoint
+            
+            else:
+                # matching
+                previmg_points, nextimg_points, matching_list = match_keypoint(prev_keypoint, keypoint, prev_description, description)
+                print("match:{}".format(len(previmg_points)))
+                prev_keypoint = keypoint
+                prev_description = description
+
         cv2.imshow("usb Camera", imdraw)
-        out.write(imdraw)
+        # out.write(imdraw)
         if cv2.waitKey(1)&0xFF == ord('q'):
             break
 
@@ -72,12 +118,13 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
         time1 += 1/elapsedTime
         time2 += elapsedTime
 
+        """
         write_status_bar(detectcount)
         if framecount % 9 == 0:
             # print(detectcount)
-            detectcounts.append([,detectcount])
+            detectcounts.append([detectcount])
             detectcount = 0
-
+        """
 
 
 def detection(img, cascade, minsize): 
@@ -111,7 +158,6 @@ def overlay_on_image(frames, object_areas, camera_width, fps):
     "
     "
     """
-    global detectcount
 
     box_color = (255, 128, 0)
     box_thickness = 1
@@ -119,11 +165,11 @@ def overlay_on_image(frames, object_areas, camera_width, fps):
     label_text_color = (255, 255, 255)
 
     img = frames
-    if object_areas  == ():
+    cv2.putText(img_cp, fps,(camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
+
+    if isinstance(object_areas, tuple):
         return img
     else:
-        detectcount += 1
-
     # if isinstance(object_areas, type(None)):
     #     return img
 
@@ -131,11 +177,11 @@ def overlay_on_image(frames, object_areas, camera_width, fps):
         img_cp = img.copy()
 
         cv2.putText(img_cp, fps,(camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
-        text = make_status_bar(detectcount)
-        cv2.putText(img_cp, text,(camera_width-170,45), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
+        # text = make_status_bar(detectcount)
+        # cv2.putText(img_cp, text,(camera_width-170,45), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
 
-        if detectcount < 6:
-            return img_cp
+        # if detectcount < 6:
+        #     return img_cp
 
         for (x, y, w, h) in object_areas:
             box_top = y
@@ -145,8 +191,8 @@ def overlay_on_image(frames, object_areas, camera_width, fps):
 
             cv2.rectangle(img_cp, (box_left, box_top), (box_right, box_bottom), box_color, box_thickness)
 
-            label_text = "SMILE!"
-            label_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 5)[0]
+            label_text = "DETECT!"
+            label_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
             label_left = box_left
             label_top = box_top - label_size[1]
             if (label_top < 1):
@@ -154,11 +200,11 @@ def overlay_on_image(frames, object_areas, camera_width, fps):
             label_right = label_left + label_size[0]
             label_bottom = label_top + label_size[1]
 
-            cv2.rectangle(img_cp, (label_left - 1, label_top - 1), (label_right + 1, label_bottom + 1), label_background_color, 5)
-            cv2.putText(img_cp, label_text, (label_left, label_bottom), cv2.FONT_HERSHEY_SIMPLEX, 0.5, label_text_color, 5)
+            cv2.rectangle(img_cp, (label_left - 1, label_top - 1), (label_right + 1, label_bottom + 1), label_background_color, 10)
+            cv2.putText(img_cp, label_text, (label_left, label_bottom), cv2.FONT_HERSHEY_SIMPLEX, 0.5, label_text_color, 2)
         
 
-    return img_cp
+            return img_cp
 
 if __name__=="__main__":
 
