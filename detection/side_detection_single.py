@@ -119,8 +119,8 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
                 prev_keypoint = keypoint
                 prev_description = description
 
-        cv2.imshow("usb Camera", imdraw)
-        # out.write(imdraw)
+        # cv2.imshow("usb Camera", imdraw)
+        out.write(imdraw)
         if cv2.waitKey(1)&0xFF == ord('q'):
             break
 
