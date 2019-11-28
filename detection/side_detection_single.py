@@ -60,67 +60,92 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
     cam.set(cv2.CAP_PROP_FPS, vidfps)
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width)
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_height)
+    
+    strtime= datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    if file_format == "Movie":
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        # 幅
+        W = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # 高さ
+        H = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        out = cv2.VideoWriter("../result/" + strtime + ".avi",fourcc, vidfps, (W, H))
+    elif file_format == "Image":
+        if os.path.isfile("../result/" + strtime):
+            os.mkdir("../result/" + strtime)
 
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    filename = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-    # 幅
-    W = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
-    # 高さ
-    H = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    out = cv2.VideoWriter("../result/" + filename + ".avi",fourcc, vidfps, (W, H))
+
 
     prev_areas = ()
     prev_keypoint = []
     prev_description = []
+    time_list = []
     # nodetect_count = 0
 
     while True:
         t1 = time.perf_counter()
         
         ret, img = cam.read()
+        str_frame_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         if not ret:
             continue
 
         result_areas = detection(img, cascade, minsize)
+        
         if isinstance(result_areas, tuple) and isinstance(prev_areas, tuple):
+            "not 認識 & not 過去の認識"
             pass
 
         elif isinstance(prev_areas, tuple):
+            "過去の座標がなければ現フレーム座標を代入"
             prev_areas = result_areas
 
         elif isinstance(result_areas, tuple):
+            "現フレーム座標なければ過去の座標を代入"
             result_areas = prev_areas
         else:
+            "現フレーム座標を過去の座標に代入"
             prev_areas = result_areas
             
         
         cropimage = crop_image(img, result_areas)
 
         imdraw = overlay_on_image(img, result_areas, camera_width, fpstext)
+
         if isinstance(cropimage, list):
+            "cropimageがなければ"
             pass
         else:
             keypoint, description = detect_keypoint(cropimage)
             if keypoint == [] and prev_keypoint  == []:
+                "現在のkeypoint と過去のkeypointがなければ"
                 pass
 
             elif prev_keypoint  == []:
+                "過去のkeypointがなければ"
                 prev_keypoint = keypoint
                 prev_description = description
             
-            elif keypoint  == []:
-                keypoint = prev_keypoint
+            # elif keypoint  == []:
+            #     "現在のkeypointがなければ"
+            #     keypoint = prev_keypoint
+            #     description = prev_description
             
             else:
-                # matching
+                "現在のkeypoint と過去のkeypointがなければ"
                 previmg_points, nextimg_points, matching_list = match_keypoint(prev_keypoint, keypoint, prev_description, description)
                 print("match:{}".format(len(previmg_points)))
                 match_points.append(previmg_points)
                 prev_keypoint = keypoint
                 prev_description = description
 
+
         # cv2.imshow("usb Camera", imdraw)
-        out.write(imdraw)
+        if file_format == "Movie":
+            out.write(imdraw)
+
+        elif file_format == "Image":
+            cv2.imwrite("../result/" + strtime + "/" + str_frame_time + ".jpg", imdraw)
+
         if cv2.waitKey(1)&0xFF == ord('q'):
             break
 
@@ -129,7 +154,7 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
         if framecount >= 15:
             fps = (time1/15)
             fps_list.append(fps)
-            fpstext = "(Playback) {:.1f} FPS".format(fps)
+            fpstext = "{:.1f} FPS".format(fps)
             framecount = 0
             time1 = 0
             time2 = 0
@@ -140,14 +165,6 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize):
         time2 += elapsedTime
 
         frame += 1
-        """
-        write_status_bar(detectcount)
-        if framecount % 9 == 0:
-            # print(detectcount)
-            detectcounts.append([detectcount])
-            detectcount = 0
-        """
-
 
 def detection(img, cascade, minsize): 
     """
@@ -234,19 +251,20 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", "-m", default="", help="Path of the detection model.")
     parser.add_argument("--usbcam", type=int, default=0, help="USB Camera number.")
-    parser.add_argument("--minsize", type=int, default=450, help="Detect minimum size..")
+    parser.add_argument("--minsize", type=int, default=250, help="Detect minimum size.")
+    parser.add_argument("--StoreFileType", "-s", type=int, default=250, help="Choose Movie or Image file you want to store.")
     args = parser.parse_args()
 
     cascade = args.model
     usbcam = args.usbcam
     minsize = args.minsize
-
-    camera_width =  1024 #600
-    camera_height = 768 #480
-    vidfps = 15
+    file_foramt = args.StoreFileType
+    camera_width =  600#1024 #600
+    camera_height = 480#768 #480
+    vidfps = 27
 
     try:
-        capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize)
+        capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format)
 
     finally:
         filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
