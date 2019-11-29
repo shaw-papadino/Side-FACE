@@ -48,24 +48,27 @@ def crop_image(image, object_areas):
     for (x, y, w, h) in object_areas:
         return image[y:y+h, x:x+w]
 
-def apply_areas(result_areas, prev_areas):
+def apply_areas(result_areas, prev_areas, area_list):
 
         if isinstance(result_areas, tuple) and isinstance(prev_areas, tuple):
             "not 認識 & not 過去の認識"
-            pass
+            area_list.append([["null", "null", "null", "null"]])
 
         elif isinstance(prev_areas, tuple):
             "過去の座標がなければ現フレーム座標を代入"
             prev_areas = result_areas
+            area_list.append(result_areas)
 
         elif isinstance(result_areas, tuple):
             "現フレーム座標なければ過去の座標を代入"
             result_areas = prev_areas
+            area_list.append(result_areas)
         else:
             "現フレーム座標を過去の座標に代入"
             prev_areas = result_areas
+            area_list.append(result_areas)
 
-        return result_areas, prev_areas
+        return result_areas, prev_areas, area_list
 
 def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record):
 
@@ -121,7 +124,7 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
 
 
         result_areas = detection(img, cascade, minsize)
-        result_areas, prev_areas = apply_areas(result_areas, prev_areas)
+        result_areas, prev_areas, area_list = apply_areas(result_areas, prev_areas, area_list)
             
         cropimage = crop_image(img, result_areas)
 
@@ -303,10 +306,11 @@ if __name__=="__main__":
         with open("../result/" + filename + ".csv", "w") as f:
             writer = csv.writer(f, lineterminator="\n") # 改行コード（\n）を指定しておく
 
-            writer.writerow(["frames","time", "matchpoint",round(fps_ave,2)])
+            writer.writerow(["frames","time[ms]", "matchpoint", "x", "y", "w", "h", round(fps_ave,2)])
             # frameのリスト作成
             frame_list = list(range(frame))
             # frame, matchpointを書き込み
-            for frame, detecttime, point in zip(frame_list, time_list, match_points):
+            for frame, detecttime, point, area in zip(frame_list, time_list, match_points, area_list):
+                area = area[0]
+                writer.writerow([frame, int(detecttime*1000), len(point), area[0], area[1], area[2], area[3]])
 
-                writer.writerow([frame, int(detecttime*1000), len(point)])
