@@ -79,7 +79,6 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
     global fps_list 
     global time_list
     global area_list
-
     cam = cv2.VideoCapture(usbcam)
     cam.set(cv2.CAP_PROP_FPS, vidfps)
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width)
@@ -145,12 +144,10 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
                 previmg_points, nextimg_points, matching_list = match_keypoint(prev_keypoint, keypoint, prev_description, description)
                 # print("match:{}".format(len(previmg_points)))
                 match_points.append(previmg_points)
-
                 prev_keypoint = keypoint
                 prev_description = description
 
         if vision:
-            imdraw = overlay_on_detect_image(img, camera_width, result_areas)
             cv2.imshow("usb Camera", imdraw)
             if cv2.waitKey(1)&0xFF == ord('q'):
                 break
@@ -158,12 +155,13 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
             pass
 
         if record:
+            imdraw = overlay_on_detect_image(img, camera_width, result_areas)
 
             if file_format == "Movie":
-                out.write(img)
+                out.write(imdraw)
 
             elif file_format == "Image":
-                cv2.imwrite("../result/" + strtime + "/" + str_frame_time + ".jpg", img)
+                cv2.imwrite("../result/" + strtime + "/" + str_frame_time + ".jpg", imdraw)
 
         else:
             pass
