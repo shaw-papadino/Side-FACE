@@ -4,6 +4,8 @@ import glob
 import os
 from add_positivedat import add_positivedat
 import sys
+
+
 def contImg(path):
     """
     Image Augmentation をする
@@ -14,8 +16,8 @@ def contImg(path):
     max_table = 205
     diff_table = max_table - min_table
 
-    LUT_HC = np.arange(256, dtype = 'uint8' )
-    LUT_LC = np.arange(256, dtype = 'uint8' )
+    LUT_HC = np.arange(256, dtype="uint8")
+    LUT_LC = np.arange(256, dtype="uint8")
 
     # ハイコントラストLUT作成
     for i in range(0, min_table):
@@ -41,14 +43,15 @@ def contImg(path):
 
         if not os.path.exists(path + "contp"):
             os.makedirs(path + "contp")
-        cv.imwrite(path + "contp/" + j + "h.jpg",high_cont_img)
-        cv.imwrite(path + "contp/" + j + "l.jpg",low_cont_img)
+        cv.imwrite(path + "contp/" + j + "h.jpg", high_cont_img)
+        cv.imwrite(path + "contp/" + j + "l.jpg", low_cont_img)
+
 
 def gammaImg(path):
 
     # ガンマ変換ルックアップテーブル
-    gs = [0.8,1.2,1.6]
-    LUT_G1 = np.arange(256, dtype = 'uint8' )
+    gs = [0.8, 1.2, 1.6]
+    LUT_G1 = np.arange(256, dtype="uint8")
 
     for g in gs:
         for i in range(256):
@@ -63,13 +66,14 @@ def gammaImg(path):
 
             if not os.path.exists(path + "gammap"):
                 os.makedirs(path + "gammap")
-            cv.imwrite(path + "gammap/" + j + str(g) +".jpg",gamma_img)
+            cv.imwrite(path + "gammap/" + j + str(g) + ".jpg", gamma_img)
+
 
 def blurImg(path):
-    xs =  [1,3,5,7,9]
+    xs = [1, 3, 5, 7, 9]
 
     for x in xs:
-        average_square = (x,x)
+        average_square = (x, x)
 
         imgList = sorted(glob.glob(path + "gammap/*.jpg"))
         for img in imgList:
@@ -79,7 +83,8 @@ def blurImg(path):
 
             if not os.path.exists(path + "blurp"):
                 os.makedirs(path + "blurp")
-            cv.imwrite(path + "blurp/" + j + str(x) + ".jpg",blur_img)
+            cv.imwrite(path + "blurp/" + j + str(x) + ".jpg", blur_img)
+
 
 if __name__ == "__main__":
     args = sys.argv

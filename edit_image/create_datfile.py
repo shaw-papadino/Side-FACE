@@ -5,7 +5,6 @@ import re
 path = "./201804280930"
 
 
-
 def create_positivedat(path, datfile):
     """
     交差検証用のポジティブリスト作成
@@ -33,7 +32,7 @@ def create_positivedat(path, datfile):
 
             # print("ire{0}".format(ire[1]))
             if isp == pre.group():
-                with open(path + "/positive.dat", mode='a') as f:
+                with open(path + "/positive.dat", mode="a") as f:
                     f.write(p)
             else:
                 pass
@@ -56,11 +55,12 @@ def create_negativedat(path, datfile):
             nn = n.replace("img/", "").replace(".jpg", "").replace("\n", "")
 
             if isp == nn:
-                with open(path + "/negative.dat", mode='a') as f:
-                    f.write(n + '\n')
+                with open(path + "/negative.dat", mode="a") as f:
+                    f.write(n + "\n")
                 break
             else:
                 pass
+
 
 def create_datfile(path, positivedat, negativedat):
 
@@ -72,10 +72,11 @@ def create_datfile(path, positivedat, negativedat):
     create_negativedat(path, negativedat)
     print("--- finish writing ---")
 
+
 if __name__ == "__main__":
 
     path = "./201804280930/"
 
-    for r in range(2,10):
+    for r in range(2, 10):
         # create_positivedat(path, r)
         create_negativedat(path, r)

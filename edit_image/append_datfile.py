@@ -3,6 +3,7 @@ import glob
 import os
 import re
 
+
 def append_datfile(path, datfile):
 
     pList = path + datfile + "positive.dat"
@@ -14,14 +15,13 @@ def append_datfile(path, datfile):
     flg = False
     for i in imgList:
         isp = os.path.splitext(os.path.basename(i))[0]
-        
+
         if isp == "image_03680":
             flg = True
-        
 
-        if flg == False :
+        if flg == False:
             continue
-        else :
+        else:
             pass
 
         file_flg = False
@@ -37,18 +37,18 @@ def append_datfile(path, datfile):
             # ire = re.search(pattern, isp)
             # pre = re.search(patternp, pp)
 
-            
             if isp == positive_name:
                 file_flg = True
                 break
-        if file_flg :
+        if file_flg:
             pass
-        else :
+        else:
             # print("img/" + isp + ".jpg")
-            with open(path + datfile + "negative.dat", mode='a') as f:
+            with open(path + datfile + "negative.dat", mode="a") as f:
                 f.write("img/" + isp + ".jpg\n")
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     args = sys.argv
     path = args[1]
     datfile = args[2]

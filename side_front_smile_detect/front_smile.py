@@ -7,10 +7,14 @@ import sys
 from datetime import datetime
 from face_square_clips import face_square_clips
 from dir_exists import dir_exists
+
+
 class Detection:
     """横側からの笑顔を検出する"""
 
-    def __init__(self, path = "./frontpictest/",cascade = "haarcascade_smile.xml"):#, m_size = 450):#"cascade/0629_neo/cascade.xml"
+    def __init__(
+        self, path="./frontpictest/", cascade="haarcascade_smile.xml"
+    ):  # , m_size = 450):#"cascade/0629_neo/cascade.xml"
         self.path_img = path
         self.file_lists = sorted(glob.glob(self.path_img + "img/*.jpg"))
         # self.p_list = self.path_img + "positive_1_addshort.dat"#通常はpositive_1.dat
@@ -40,7 +44,9 @@ class Detection:
         exc = 0
         for file_list in self.file_lists:
             # print(file_list)
-            flg, img, img_file_name = face_square_clips(self.cascade,self.cascade2, file_list)#, self.m_size)
+            flg, img, img_file_name = face_square_clips(
+                self.cascade, self.cascade2, file_list
+            )  # , self.m_size)
             # print(flg)
             # P_in = 0
             # N_in = 0
@@ -90,7 +96,14 @@ class Detection:
                 else:
                     exc += 1
                     """
-        result_d = {"ALL": len(self.file_lists), "P_P": P_P, "P_N": P_N, "N_P": N_P, "N_N": N_N, "EXC": exc}
+        result_d = {
+            "ALL": len(self.file_lists),
+            "P_P": P_P,
+            "P_N": P_N,
+            "N_P": N_P,
+            "N_N": N_N,
+            "EXC": exc,
+        }
         for key, value in result_d.items():
             print("key:", key, "-- value:", str(value))
 
@@ -98,14 +111,16 @@ class Detection:
 if __name__ == "__main__":
     arg = sys.argv
 
-    if len(arg) == 1 :
+    if len(arg) == 1:
         sideface = Detection()
         sideface.check_detection_sideface()
 
     else:
         if len(arg) == 3:
             if arg[1] == "flont":
-                frontalface = Detection(arg[2], "./haarcascades/haarcascade_frontalface_default.xml")
+                frontalface = Detection(
+                    arg[2], "./haarcascades/haarcascade_frontalface_default.xml"
+                )
                 frontalface.check_detection_sideface()
             elif arg[1] == "flontsmile":
                 frontalsmile = Detection(arg[2], "./haarcascades/haarcascades_smile.xml")

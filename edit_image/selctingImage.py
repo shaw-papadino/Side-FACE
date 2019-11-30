@@ -7,12 +7,14 @@ from sorting_positive import sorting_imagefile
 
 import subprocess
 import sys
+
+
 def selctingImage(path, datfile):
 
     for r in range(1):
         path = path + "/" + str(r) + "/"
 
-        sorting_imagefile(path,  datfile)
+        sorting_imagefile(path, datfile)
 
         print("画像コピー")
         copy_all_img(path)
@@ -21,7 +23,7 @@ def selctingImage(path, datfile):
         move_img(path)
         print("テスト画像合体")
         combine_img(path, "Positive", "Negative", "TestImg")
-        
+
         print("datfileを作成")
         create_datfile(path, positivedat, negativedat)
 
@@ -36,6 +38,7 @@ def selctingImage(path, datfile):
         command = ["./create_cascade.sh", path]
         subprocess.Popen(command)
         """
+
 
 if __name__ == "__main__":
 

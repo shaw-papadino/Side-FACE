@@ -20,6 +20,7 @@ box_thickness = 1
 label_background_color = (125, 175, 75)
 label_text_color = (255, 255, 255)
 
+
 def capture_thread(usbcam, frameBuffer, results, vidfps, camera_width, camera_height):
     """
     "
@@ -68,26 +69,27 @@ def capture_thread(usbcam, frameBuffer, results, vidfps, camera_width, camera_he
         else:
             imdraw = overlay_on_image(frames, lastresults, camera_width, fps, detectfps)
 
-        cv2.imshow("usb Camera",imdraw)
+        cv2.imshow("usb Camera", imdraw)
 
-        if cv2.waitKey(1)&0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
         # FPS calculation
         framecount += 1
         if framecount >= 15:
-            fps       = "(Playback) {:.1f} FPS".format(time1/15)
-            detectfps = "(Detection) {:.1f} FPS".format(detectframecount/time2)
+            fps = "(Playback) {:.1f} FPS".format(time1 / 15)
+            detectfps = "(Detection) {:.1f} FPS".format(detectframecount / time2)
             framecount = 0
             detectframecount = 0
             time1 = 0
             time2 = 0
         t2 = time.perf_counter()
-        elapsedTime = t2-t1
-        time1 += 1/elapsedTime
+        elapsedTime = t2 - t1
+        time1 += 1 / elapsedTime
         time2 += elapsedTime
 
-def detection(results, frameBuffer, cascade, minsize): 
+
+def detection(results, frameBuffer, cascade, minsize):
     """
     "
     "
@@ -100,7 +102,7 @@ def detection(results, frameBuffer, cascade, minsize):
     """
     cascade = cv2.CascadeClassifier(cascade)
     while True:
-        
+
         if frameBuffer.empty():
             continue
         else:
@@ -110,9 +112,15 @@ def detection(results, frameBuffer, cascade, minsize):
             grayimg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
             tinf = time.perf_counter()
-            ans = cascade.detectMultiScale(grayimg, scaleFactor=1.1, minNeighbors=5,\
-                    minSize=(minsize,minsize), maxSize=(minsize+300,minsize+300))
+            ans = cascade.detectMultiScale(
+                grayimg,
+                scaleFactor=1.1,
+                minNeighbors=5,
+                minSize=(minsize, minsize),
+                maxSize=(minsize + 300, minsize + 300),
+            )
             results.put(ans)
+
 
 def overlay_on_image(frames, object_areas, camera_width, fps, detectfps):
     """
@@ -135,26 +143,61 @@ def overlay_on_image(frames, object_areas, camera_width, fps, detectfps):
         box_right = x + w
         box_bottom = y + h
 
-        cv2.rectangle(img_cp, (box_left, box_top), (box_right, box_bottom), box_color, box_thickness)
+        cv2.rectangle(
+            img_cp, (box_left, box_top), (box_right, box_bottom), box_color, box_thickness
+        )
 
         label_text = "SMILE!"
         label_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 5)[0]
         label_left = box_left
         label_top = box_top - label_size[1]
-        if (label_top < 1):
+        if label_top < 1:
             label_top = 1
         label_right = label_left + label_size[0]
         label_bottom = label_top + label_size[1]
 
-        cv2.rectangle(img_cp, (label_left - 1, label_top - 1), (label_right + 1, label_bottom + 1), label_background_color, 5)
-        cv2.putText(img_cp, label_text, (label_left, label_bottom), cv2.FONT_HERSHEY_SIMPLEX, 0.5, label_text_color, 5)
-    
-    cv2.putText(img_cp, fps,       (camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
-    cv2.putText(img_cp, detectfps, (camera_width-170,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
+        cv2.rectangle(
+            img_cp,
+            (label_left - 1, label_top - 1),
+            (label_right + 1, label_bottom + 1),
+            label_background_color,
+            5,
+        )
+        cv2.putText(
+            img_cp,
+            label_text,
+            (label_left, label_bottom),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            label_text_color,
+            5,
+        )
+
+    cv2.putText(
+        img_cp,
+        fps,
+        (camera_width - 170, 15),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.5,
+        (38, 0, 255),
+        1,
+        cv2.LINE_AA,
+    )
+    cv2.putText(
+        img_cp,
+        detectfps,
+        (camera_width - 170, 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.5,
+        (38, 0, 255),
+        1,
+        cv2.LINE_AA,
+    )
 
     return img_cp
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", "-m", default="", help="Path of the detection model.")
@@ -166,27 +209,29 @@ if __name__=="__main__":
     usbcam = args.usbcam
     minsize = args.minsize
 
-    camera_width =  1024 #600
-    camera_height = 768 #480
+    camera_width = 1024  # 600
+    camera_height = 768  # 480
     vidfps = 30
 
     try:
-        mp.set_start_method('forkserver')
+        mp.set_start_method("forkserver")
         # Quene(maxsize)
         frameBuffer = mp.Queue(10)
         results = mp.Queue()
 
         # Start streaming
-        p = mp.Process(target=capture_thread,
-                       args=(usbcam, frameBuffer, results, vidfps, camera_width, camera_height),
-                       daemon=True)
+        p = mp.Process(
+            target=capture_thread,
+            args=(usbcam, frameBuffer, results, vidfps, camera_width, camera_height),
+            daemon=True,
+        )
         p.start()
         processes.append(p)
 
         # Activation of detection
-        p = mp.Process(target=detection,
-                       args=(results, frameBuffer, cascade, minsize),
-                       daemon=True)
+        p = mp.Process(
+            target=detection, args=(results, frameBuffer, cascade, minsize), daemon=True
+        )
         p.start()
         processes.append(p)
 

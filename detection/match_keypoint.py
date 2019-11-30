@@ -9,19 +9,20 @@ def detect_keypoint(image):
     keypoint: corners, edges in image
     descriptor: a feature vector containing the keypoints’ essential characteristics
     """
-    
+
     akaze = cv2.AKAZE_create()
     # frame1 = cv2.imread('/Users/okayamashoya/side_face_test1.png')
-    grayimg = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+    grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     kp, des = akaze.detectAndCompute(grayimg, None)
-    
+
     return kp, des
+
 
 def match_keypoint(prevkp, nextkp, prevdes, nextdes):
     """
     knnアルゴリズムを用いて2つの画像の対応座標を返す
     """
-   
+
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(prevdes, nextdes, k=2)
 
@@ -32,7 +33,7 @@ def match_keypoint(prevkp, nextkp, prevdes, nextdes):
     nextimg_points = []
     if matches:
         if len(matches[0]) > 1:
-            for m,n in matches:
+            for m, n in matches:
 
                 distance_list.append(m.distance)
 
@@ -50,7 +51,8 @@ def match_keypoint(prevkp, nextkp, prevdes, nextdes):
     # print(sum(distance_list))
     # print(len(distance_list))
 
-    return previmg_points, nextimg_points, matching_list # マッチした座標のリスト, draw用にmatching_list
+    return previmg_points, nextimg_points, matching_list  # マッチした座標のリスト, draw用にmatching_list
+
 
 def draw_match_keypoint(previmg, nextimg, prevkp, nextkp, matching_list):
     """
@@ -58,11 +60,14 @@ def draw_match_keypoint(previmg, nextimg, prevkp, nextkp, matching_list):
     """
 
     if matching_list != []:
-        drawimage = cv2.drawMatchesKnn(previmg, prevkp, nextimg, nextkp, matching_list, None, flags=4)
+        drawimage = cv2.drawMatchesKnn(
+            previmg, prevkp, nextimg, nextkp, matching_list, None, flags=4
+        )
     else:
         return nextimg
 
     return drawimage
+
 
 def main(path1, path2):
 
@@ -72,13 +77,18 @@ def main(path1, path2):
     next_image = cv2.imread(path2)
     next_keypoint, next_distance = detect_keypoint(next_image)
 
-    previmg_points, nextimg_points, matching_list = match_keypoint(prev_keypoint, next_keypoint, prev_distance,  next_distance)
-    
-    drawimage = draw_match_keypoint(prev_image, next_image, prev_keypoint, next_keypoint, matching_list)
+    previmg_points, nextimg_points, matching_list = match_keypoint(
+        prev_keypoint, next_keypoint, prev_distance, next_distance
+    )
 
-    cv2.imshow("match image",drawimage)
+    drawimage = draw_match_keypoint(
+        prev_image, next_image, prev_keypoint, next_keypoint, matching_list
+    )
 
-if __name__=="__main__":
+    cv2.imshow("match image", drawimage)
+
+
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 

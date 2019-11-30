@@ -11,7 +11,7 @@ def add_positivedat(path, datfile):
     Image Augmentationで追加された画像(元のファイル名に記号追加したファイル名)を
     ポジティブリストに追加する
     """
-    
+
     # ポジティブリスト読み込み
     pList = path + datfile + "positive.dat"
     pOpen = open(pList, "r")
@@ -36,14 +36,28 @@ def add_positivedat(path, datfile):
             ire = re.search(pattern, isp)
             pre = re.search(patternp, pp)
 
-            if ire is None :
-                    continue
+            if ire is None:
+                continue
             # print("ire:{}".format(ire.groups()))
             # print(pre.groups())
             if ire.groups()[1] == pre.groups()[1]:
                 # ポジティブリストに追加
-                with open(pList, mode='a') as f:
-                    f.write("img/" + isp + ".jpg " + p[1] + " " + p[2] + " " + p[3] + " " + p[4] + " " + p[5] +  '\n')
+                with open(pList, mode="a") as f:
+                    f.write(
+                        "img/"
+                        + isp
+                        + ".jpg "
+                        + p[1]
+                        + " "
+                        + p[2]
+                        + " "
+                        + p[3]
+                        + " "
+                        + p[4]
+                        + " "
+                        + p[5]
+                        + "\n"
+                    )
                 break
 
             else:

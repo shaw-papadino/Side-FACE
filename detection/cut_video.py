@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 import argparse
 from env_sidesmile_calc import text2lists
+
 """
 1.連番画像のタイトルを取得
 2.与えられたフレームレートと1を使って、その画像が動画の何秒地点なのかを計算
@@ -15,11 +16,13 @@ from env_sidesmile_calc import text2lists
 7.配列の末尾の値内にsがなければ、変数を配列[[8,18],[25,35],[40,50]]に格納、あれば末尾の値の2番目にfを代入する
 8.配列内の値を使ってffmpegで前側カメラで撮影した動画を切り取った動画を出力する。
 """
+
+
 def cut_video(startT, input, output, path, f, pathtype):
 
     stream = ffmpeg.input(input)
     # path = "./20190124201103_result/P_20190124201103/"
-    starttime = int(startT * 60) # 1は39分から,2は34分から
+    starttime = int(startT * 60)  # 1は39分から,2は34分から
     framerate = f
     beforeTime = 0
     sumTime = 0
@@ -47,7 +50,6 @@ def cut_video(startT, input, output, path, f, pathtype):
         # print(fileTime)
         # print(sumTime)
         elapsed = round(fileTime - beforeTime, 2)
-
 
         # 0.5秒ぶんより大きければ、次の区間へ
         if beforeTime == 0 or elapsed > 0.5:
@@ -78,23 +80,21 @@ def cut_video(startT, input, output, path, f, pathtype):
         f = time_l[1] - time_l[0]
         s = time_l[0] + starttime
         print(time_l)
-        dstream = ffmpeg.output(stream, output + str(s) + "-" + str(f) + ".avi",t=f, ss=s)
+        dstream = ffmpeg.output(stream, output + str(s) + "-" + str(f) + ".avi", t=f, ss=s)
         ffmpeg.run(dstream)
         # time.sleep(10)
+
+
 def parse_args():
-    parser = argparse.ArgumentParser(description='cutting video')
-    parser.add_argument('--starttime', '-s', type=int, default=24,
-                        help='Start time')
-    parser.add_argument('--input', '-i', type=str,
-                        help='Input movie')
-    parser.add_argument('--output', '-o', type=str,
-                        help="Output dir")
-    parser.add_argument('--path', '-p', type=str,
-                        help='imageFile dir or textfile')
-    parser.add_argument('--framerate', '-f', type=int, default=25,
-                        help='framerate in the movie')
+    parser = argparse.ArgumentParser(description="cutting video")
+    parser.add_argument("--starttime", "-s", type=int, default=24, help="Start time")
+    parser.add_argument("--input", "-i", type=str, help="Input movie")
+    parser.add_argument("--output", "-o", type=str, help="Output dir")
+    parser.add_argument("--path", "-p", type=str, help="imageFile dir or textfile")
+    parser.add_argument("--framerate", "-f", type=int, default=25, help="framerate in the movie")
     args = parser.parse_args()
     return args
+
 
 if __name__ == "__main__":
 
@@ -106,4 +106,4 @@ if __name__ == "__main__":
         assert os.path.splitext(args.path) not in [".txt", ".dat"], "ファイルの拡張子は.txtか.datにしてね。"
         pathtype = 1
 
-    cut_video(args.starttime,args.input,args.output,args.path,args.framerate, pathtype)
+    cut_video(args.starttime, args.input, args.output, args.path, args.framerate, pathtype)

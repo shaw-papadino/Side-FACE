@@ -11,13 +11,12 @@ from match_keypoint import *
 
 fpstext = ""
 framecount = 0
-time1 = 0
-time2 = 0
 frame = 0
 match_points = []
 fps_list = []
 time_list = []
 area_list = []
+
 
 def make_status_bar(count):
     """
@@ -25,9 +24,10 @@ def make_status_bar(count):
     """
 
     maxcount = 10
-    bar  = count*"@" + (maxcount - count)*" "
-    text = "\r| {} | [ {} / {} % ]".format(bar, str(count*10), str(maxcount*10))
+    bar = count * "@" + (maxcount - count) * " "
+    text = "\r| {} | [ {} / {} % ]".format(bar, str(count * 10), str(maxcount * 10))
     return text
+
 
 def write_status_bar(count):
     """
@@ -38,6 +38,7 @@ def write_status_bar(count):
     sys.stdout.write(text)
     sys.stdout.flush()
 
+
 def crop_image(image, object_areas):
     """
     認識した部分をクロップした画像を返す
@@ -46,40 +47,41 @@ def crop_image(image, object_areas):
         return []
     # img[y: y + h, x: x + w]
     for (x, y, w, h) in object_areas:
-        return image[y:y+h, x:x+w]
+        return image[y : y + h, x : x + w]
+
 
 def apply_areas(result_areas, prev_areas, area_list):
 
-        if isinstance(result_areas, tuple) and isinstance(prev_areas, tuple):
-            "not 認識 & not 過去の認識"
-            area_list.append([["null", "null", "null", "null"]])
+    if isinstance(result_areas, tuple) and isinstance(prev_areas, tuple):
+        "not 認識 & not 過去の認識"
+        area_list.append([["null", "null", "null", "null"]])
 
-        elif isinstance(prev_areas, tuple):
-            "過去の座標がなければ現フレーム座標を代入"
-            prev_areas = result_areas
-            area_list.append(result_areas)
+    elif isinstance(prev_areas, tuple):
+        "過去の座標がなければ現フレーム座標を代入"
+        prev_areas = result_areas
+        area_list.append(result_areas)
 
-        elif isinstance(result_areas, tuple):
-            "現フレーム座標なければ過去の座標を代入"
-            result_areas = prev_areas
-            area_list.append(result_areas)
-        else:
-            "現フレーム座標を過去の座標に代入"
-            prev_areas = result_areas
-            area_list.append(result_areas)
+    elif isinstance(result_areas, tuple):
+        "現フレーム座標なければ過去の座標を代入"
+        result_areas = prev_areas
+        area_list.append(result_areas)
+    else:
+        "現フレーム座標を過去の座標に代入"
+        prev_areas = result_areas
+        area_list.append(result_areas)
 
-        return result_areas, prev_areas, area_list
+    return result_areas, prev_areas, area_list
 
-def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record):
 
-    """csvへの記載をどうするか"""
+def capture(
+    usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record
+):
+
     global fpstext
     global framecount
-    global time1
-    global time2
     global frame
     global match_points
-    global fps_list 
+    global fps_list
     global time_list
     global area_list
 
@@ -87,32 +89,30 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
     cam.set(cv2.CAP_PROP_FPS, vidfps)
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width)
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_height)
-    
-    strtime= datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+    strtime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     if record:
         if file_format == "Movie":
-            fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+            fourcc = cv2.VideoWriter_fourcc(*"MJPG")
             # 幅
             W = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
             # 高さ
             H = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            out = cv2.VideoWriter("../result/" + strtime + ".avi",fourcc, vidfps, (W, H))
+            out = cv2.VideoWriter("../result/" + strtime + ".avi", fourcc, vidfps, (W, H))
         elif file_format == "Image":
             if not os.path.isfile("../result/" + strtime):
                 os.mkdir("../result/" + strtime)
     else:
         pass
 
-
-
     prev_areas = ()
     prev_keypoint = []
     prev_description = []
     starttime = time.perf_counter()
-    time_list.append(starttime-starttime)
+    time_list.append(starttime - starttime)
     while True:
         t1 = time.perf_counter()
-        
+
         ret, img = cam.read()
 
         if not ret:
@@ -122,10 +122,9 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
         detecttime = time.perf_counter() - starttime
         time_list.append(detecttime)
 
-
         result_areas = detection(img, cascade, minsize)
         result_areas, prev_areas, area_list = apply_areas(result_areas, prev_areas, area_list)
-            
+
         cropimage = crop_image(img, result_areas)
 
         if isinstance(cropimage, list):
@@ -138,14 +137,16 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
                 "現在のkeypointがなければ"
                 pass
 
-            elif prev_keypoint  == []:
+            elif prev_keypoint == []:
                 "過去のkeypointがなければ"
                 prev_keypoint = keypoint
                 prev_description = description
-            
+
             else:
                 "どちらもある場合"
-                previmg_points, nextimg_points, matching_list = match_keypoint(prev_keypoint, keypoint, prev_description, description)
+                previmg_points, nextimg_points, matching_list = match_keypoint(
+                    prev_keypoint, keypoint, prev_description, description
+                )
                 # print("match:{}".format(len(previmg_points)))
                 match_points.append(previmg_points)
 
@@ -155,7 +156,7 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
         if vision:
             imdraw = overlay_on_detect_image(img, camera_width, result_areas)
             cv2.imshow("usb Camera", imdraw)
-            if cv2.waitKey(1)&0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
         else:
             pass
@@ -174,7 +175,7 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
         # FPS calculation
         framecount += 1
         if framecount >= 15:
-            fps = (time1/15)
+            fps = time1 / 15
             fps_list.append(fps)
             fpstext = "{:.1f} FPS".format(fps)
             framecount = 0
@@ -182,13 +183,14 @@ def capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_
             time2 = 0
 
         t2 = time.perf_counter()
-        elapsedTime = t2-t1
-        time1 += 1/elapsedTime
+        elapsedTime = t2 - t1
+        time1 += 1 / elapsedTime
         time2 += elapsedTime
 
         frame += 1
 
-def detection(img, cascade, minsize): 
+
+def detection(img, cascade, minsize):
     """
     "
     "
@@ -203,10 +205,16 @@ def detection(img, cascade, minsize):
     cascade = cv2.CascadeClassifier(cascade)
     grayimg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    ans = cascade.detectMultiScale(grayimg, scaleFactor=1.1, minNeighbors=3,\
-            minSize=(minsize,minsize), maxSize=(minsize+100,minsize+100))
-    
+    ans = cascade.detectMultiScale(
+        grayimg,
+        scaleFactor=1.1,
+        minNeighbors=3,
+        minSize=(minsize, minsize),
+        maxSize=(minsize + 100, minsize + 100),
+    )
+
     return ans
+
 
 def overlay_on_fps_image(frames, camera_width, fpstext):
     """
@@ -221,9 +229,19 @@ def overlay_on_fps_image(frames, camera_width, fpstext):
     """
 
     img = frames
-    cv2.putText(img, fpstext,(camera_width-170,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (38,0,255), 1, cv2.LINE_AA)
-    
+    cv2.putText(
+        img,
+        fpstext,
+        (camera_width - 170, 15),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.5,
+        (38, 0, 255),
+        1,
+        cv2.LINE_AA,
+    )
+
     return img
+
 
 def overlay_on_detect_image(frames, camera_width, object_areas):
     """
@@ -248,7 +266,6 @@ def overlay_on_detect_image(frames, camera_width, object_areas):
         return img
     else:
 
-
         img_cp = img.copy()
 
         for (x, y, w, h) in object_areas:
@@ -257,33 +274,53 @@ def overlay_on_detect_image(frames, camera_width, object_areas):
             box_right = x + w
             box_bottom = y + h
 
-            cv2.rectangle(img_cp, (box_left, box_top), (box_right, box_bottom), box_color, box_thickness)
+            cv2.rectangle(
+                img_cp, (box_left, box_top), (box_right, box_bottom), box_color, box_thickness
+            )
 
             label_text = "DETECT!"
             label_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
             label_left = box_left
             label_top = box_top - label_size[1]
-            if (label_top < 1):
+            if label_top < 1:
                 label_top = 1
             label_right = label_left + label_size[0]
             label_bottom = label_top + label_size[1]
 
-            cv2.rectangle(img_cp, (label_left - 1, label_top - 1), (label_right + 1, label_bottom + 1), label_background_color, 10)
-            cv2.putText(img_cp, label_text, (label_left, label_bottom), cv2.FONT_HERSHEY_SIMPLEX, 0.5, label_text_color, 2)
-        
+            cv2.rectangle(
+                img_cp,
+                (label_left - 1, label_top - 1),
+                (label_right + 1, label_bottom + 1),
+                label_background_color,
+                10,
+            )
+            cv2.putText(
+                img_cp,
+                label_text,
+                (label_left, label_bottom),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                label_text_color,
+                2,
+            )
 
             return img_cp
 
-if __name__=="__main__":
 
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", "-m", default="", help="Path of the detection model.")
     parser.add_argument("--usbcam", type=int, default=0, help="USB Camera number.")
     parser.add_argument("--minsize", type=int, default=250, help="Detect minimum size.")
-    parser.add_argument('--vision', action='store_true', help="If you want to show image.")
-    parser.add_argument('--record', action='store_true', help="if you want to record.")
-    parser.add_argument("--StoreFileType", "-s",  default="Image", help="Choose Movie or Image file you want to store.")
+    parser.add_argument("--vision", action="store_true", help="If you want to show image.")
+    parser.add_argument("--record", action="store_true", help="if you want to record.")
+    parser.add_argument(
+        "--StoreFileType",
+        "-s",
+        default="Image",
+        help="Choose Movie or Image file you want to store.",
+    )
     args = parser.parse_args()
 
     cascade = args.model
@@ -292,25 +329,40 @@ if __name__=="__main__":
     file_format = args.StoreFileType
     vision = args.vision
     record = args.record
-    camera_width =  600#1024 #600
-    camera_height = 480#768 #480
+    camera_width = 600  # 1024 #600
+    camera_height = 480  # 768 #480
     vidfps = 27
 
     try:
-        capture(usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record)
+        capture(
+            usbcam,
+            vidfps,
+            camera_width,
+            camera_height,
+            cascade,
+            minsize,
+            file_format,
+            vision,
+            record,
+        )
 
     finally:
         filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         # 平均fpsを算出
         fps_ave = sum(fps_list) / len(fps_list)
         with open("../result/" + filename + ".csv", "w") as f:
-            writer = csv.writer(f, lineterminator="\n") # 改行コード（\n）を指定しておく
+            writer = csv.writer(f, lineterminator="\n")  # 改行コード（\n）を指定しておく
 
-            writer.writerow(["frames","time[ms]", "matchpoint", "x", "y", "w", "h", round(fps_ave,2)])
+            writer.writerow(
+                ["frames", "time[ms]", "matchpoint", "x", "y", "w", "h", round(fps_ave, 2)]
+            )
             # frameのリスト作成
             frame_list = list(range(frame))
             # frame, matchpointを書き込み
-            for frame, detecttime, point, area in zip(frame_list, time_list, match_points, area_list):
+            for frame, detecttime, point, area in zip(
+                frame_list, time_list, match_points, area_list
+            ):
                 area = area[0]
-                writer.writerow([frame, int(detecttime*1000), len(point), area[0], area[1], area[2], area[3]])
-
+                writer.writerow(
+                    [frame, int(detecttime * 1000), len(point), area[0], area[1], area[2], area[3]]
+                )

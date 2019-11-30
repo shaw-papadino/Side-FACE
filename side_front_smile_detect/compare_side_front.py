@@ -5,6 +5,7 @@ import shutil
 
 from filename_to_int import filename_to_int
 
+
 def compare_side_front(frontfileList, fList, sidefileList, sList):
 
     for f in fList:
@@ -34,6 +35,8 @@ def compare_side_front(frontfileList, fList, sidefileList, sList):
             else:
                 shutil.copy(f,"/Users/okayamashoya/Downloads/20190202_compare/FP")
     """
+
+
 if __name__ == "__main__":
     path = "./frontpic_ver2/"
     frontfileList = sorted(glob.glob(path + "*.jpg"))

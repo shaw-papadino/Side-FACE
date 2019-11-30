@@ -25,7 +25,7 @@ class hist_smile(Detection):
             # print(n)
             # print(m)
             m_list.append(m)
-        m_list = sorted(m_list, key = int)
+        m_list = sorted(m_list, key=int)
 
         for i in m_list:
             i = n + "_" + str(i) + ".jpg"
@@ -35,7 +35,7 @@ class hist_smile(Detection):
 
     def compareSectionSmile(self, imgFile2, i, sectionPlist):
 
-        for file_list in imgFile2[0+i:30+i]:
+        for file_list in imgFile2[0 + i : 30 + i]:
             # print(file_list)
             flg, img, img_file_name = face_square_clips(self.cascade, file_list, self.m_size)
             if flg == True:
@@ -57,24 +57,26 @@ class hist_smile(Detection):
         N_N = 0
         imgFileSum = 0
         # pattern = "(.*)0.1s_" + str(x) + "([0-9]+).jpg"
-        for x in range(1,5):
-            imgFile = glob.glob(self.path_img + "img_nama/0.1s_"+ str(x) + "/*.jpg")
+        for x in range(1, 5):
+            imgFile = glob.glob(self.path_img + "img_nama/0.1s_" + str(x) + "/*.jpg")
 
             imgFile2 = sortIntList(imgFile)
 
             imgFileSum += len(imgFile2)
 
-            sectionPlist = open(self.path_img + "section_positive_01s_" + str(x) + ".txt").readlines()
+            sectionPlist = open(
+                self.path_img + "section_positive_01s_" + str(x) + ".txt"
+            ).readlines()
 
             for i in range(len(imgFile2) - 30):
                 sum = 0
                 P_in = 0
-                #print("pi")
+                # print("pi")
                 if i % 30 == 0:
                     print(i)
-                sum , P_in = compareSectionSmile(imgFile2, i, sectionPlist)
+                sum, P_in = compareSectionSmile(imgFile2, i, sectionPlist)
 
-                if P_in != 0 and sum >= 2: # default = 20
+                if P_in != 0 and sum >= 2:  # default = 20
                     P_P += 1
                     print("P_P:{0}".format(P_P))
                 elif P_in == 0 and sum < 2:
@@ -87,15 +89,15 @@ class hist_smile(Detection):
                     N_P += 1
                     print("N_P:{0}".format(N_P))
 
-        result_d = {"ALL": imgFileSum - 120,"P_P": P_P, "P_N": P_N, "N_P": N_P, "N_N": N_N}
+        result_d = {"ALL": imgFileSum - 120, "P_P": P_P, "P_N": P_N, "N_P": N_P, "N_N": N_N}
         for key, value in result_d.items():
             print("key:", key, "-- value:", str(value))
 
     def create_section_positive(self):
         """区間内で分けたポジティブリストを作成する"""
 
-        f = open(self.path_img + "section_positive_01s_4.txt", mode='w')
-        f_n = open(self.path_img + "section_negative_01s_4.txt", mode='w')
+        f = open(self.path_img + "section_positive_01s_4.txt", mode="w")
+        f_n = open(self.path_img + "section_negative_01s_4.txt", mode="w")
         imgFile = glob.glob(self.path_img + "img_nama/0.1s_4/*.jpg")
 
         imgFile2 = sortIntList(imgFile)
@@ -103,7 +105,7 @@ class hist_smile(Detection):
         for i in range(len(imgFile2) - 30):
             sum = 0
             pinSection = 0
-            for file_list in imgFile2[0+i:30+i]:
+            for file_list in imgFile2[0 + i : 30 + i]:
                 f_name = os.path.splitext(os.path.basename(file_list))[0]
                 # print("f_name" + f_name)
                 for s in self.P_l:
@@ -116,42 +118,41 @@ class hist_smile(Detection):
                         # print(pinSection)
             # print(pinSection)
             if pinSection >= 20:
-                s = str(0+i) + "-" + str(30+i) + ":" + str(pinSection) + "\n"
+                s = str(0 + i) + "-" + str(30 + i) + ":" + str(pinSection) + "\n"
                 f.write(s)
             else:
-                s = str(0+i) + "-" + str(30+i) + ":" + str(pinSection) + "\n"
+                s = str(0 + i) + "-" + str(30 + i) + ":" + str(pinSection) + "\n"
                 f_n.write(s)
 
-
-    def write_histgrum(self, ts_i, c_i, ts_f , c_f, flg):
+    def write_histgrum(self, ts_i, c_i, ts_f, c_f, flg):
         """ヒストグラムを描画する"""
-        fp = FontProperties(fname = "/Users/okayama/Library/Fonts/ipaexg.ttf")
+        fp = FontProperties(fname="/Users/okayama/Library/Fonts/ipaexg.ttf")
         fig = plt.figure()
-        ax1 = fig.add_subplot(1,2,1)
+        ax1 = fig.add_subplot(1, 2, 1)
         if flg == "time":
             c_v = [k for k in c.values()]
             c_k = [k for k in c]
-            ax1.hist(time_s,bins=len(c_k))#int(max(s_s_l))
-            ax1.set_xlabel(u"笑い秒/回", fontproperties = fp)
-            ax1.set_ylabel(u"回数", fontproperties = fp)
-            ax1.set_ylim(0,max(c_v)+1)
-            ax1.set_title(u"笑い平均時間分布", fontproperties = fp)
+            ax1.hist(time_s, bins=len(c_k))  # int(max(s_s_l))
+            ax1.set_xlabel(u"笑い秒/回", fontproperties=fp)
+            ax1.set_ylabel(u"回数", fontproperties=fp)
+            ax1.set_ylim(0, max(c_v) + 1)
+            ax1.set_title(u"笑い平均時間分布", fontproperties=fp)
         else:
-            ax2 = fig.add_subplot(1,2,2)
+            ax2 = fig.add_subplot(1, 2, 2)
             c_v_i = [k for k in c_i.values()]
             c_k_i = [k for k in c_i]
-            ax1.hist(ts_i,bins=len(c_k_i))#int(max(s_s_l))
-            ax1.set_xlabel(u"区間内笑い回数", fontproperties = fp)
-            ax1.set_ylabel(u"回数", fontproperties = fp)
-            ax1.set_ylim(0,max(c_v_i)+1)
-            ax1.set_title(u"区間内笑い平均時間分布", fontproperties = fp)
+            ax1.hist(ts_i, bins=len(c_k_i))  # int(max(s_s_l))
+            ax1.set_xlabel(u"区間内笑い回数", fontproperties=fp)
+            ax1.set_ylabel(u"回数", fontproperties=fp)
+            ax1.set_ylim(0, max(c_v_i) + 1)
+            ax1.set_title(u"区間内笑い平均時間分布", fontproperties=fp)
             c_v_f = [k for k in c_f.values()]
             c_k_f = [k for k in c_f]
-            ax2.hist(ts_f,bins=len(c_k_f))
-            ax2.set_xlabel(u"区間内笑い回数", fontproperties = fp)
-            ax2.set_ylabel(u"回数", fontproperties = fp)
-            ax2.set_ylim(0,max(c_v_f)+1)
-            ax2.set_title(u"区間内笑い平均時間分布", fontproperties = fp)
+            ax2.hist(ts_f, bins=len(c_k_f))
+            ax2.set_xlabel(u"区間内笑い回数", fontproperties=fp)
+            ax2.set_ylabel(u"回数", fontproperties=fp)
+            ax2.set_ylim(0, max(c_v_f) + 1)
+            ax2.set_title(u"区間内笑い平均時間分布", fontproperties=fp)
         plt.show()
 
     def splitFileName(self, p_img, pattern):
@@ -163,13 +164,12 @@ class hist_smile(Detection):
         current_slice = p_img_d.group(2)
         name_c, ext = os.path.splitext(str(current_slice))
 
-        next_img = self.P_l[i_l:][idx+1].replace("img/", "")
+        next_img = self.P_l[i_l:][idx + 1].replace("img/", "")
         next_img = next_img.split(" ")
         next_img_d = re.search(pattern, str(next_img[0]))
         next_slice = next_img_d.group(2)
         name_n, ext = os.path.splitext(str(next_slice))
-        return name_c , name_n
-
+        return name_c, name_n
 
     def averageSmileTime(self):
         """笑い平均時間を算出する"""
@@ -178,18 +178,18 @@ class hist_smile(Detection):
         time_smile_float = []
         pattern = "(.*)_(.*)"
         list_sect = [352, 1900, 1914, 3730, 4660]
-        f = open("./short_smile(0.4).txt", mode='w')
+        f = open("./short_smile(0.4).txt", mode="w")
         for idx_l, i_l in enumerate(list_sect):
 
             if idx_l == 4:
                 break
-            for idx, p_img in enumerate(self.P_l[i_l:list_sect[idx_l+1]]):
+            for idx, p_img in enumerate(self.P_l[i_l : list_sect[idx_l + 1]]):
 
-                if idx == list_sect[idx_l+1] - (i_l+1):#351
+                if idx == list_sect[idx_l + 1] - (i_l + 1):  # 351
                     break
                 name_c, name_n = splitFileName(p_img, pattern)
 
-                #print(t)
+                # print(t)
                 if int(name_n) - int(name_c) == 1:
                     s = int(name_n) - int(name_c)
                     # print(s)
@@ -207,7 +207,7 @@ class hist_smile(Detection):
         c_int = collections.Counter(time_smile_int)
         c_float = collections.Counter(time_smile_float)
 
-        return time_smile_int , c_int, time_smile_float, c_float
+        return time_smile_int, c_int, time_smile_float, c_float
 
 
 if __name__ == "__main__":

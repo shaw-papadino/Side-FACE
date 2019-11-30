@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 
+
 def sorting_imagefile(path, datfile):
 
     fileList = sorted(glob.glob(path + "/*.jpg"))
@@ -32,6 +33,7 @@ def sorting_imagefile(path, datfile):
                 if not os.path.exists("../data/negativeImage/"):
                     os.makedirs("../data/negativeImage/")
                 shutil.copy(file, "../data/negativeImage/")
+
 
 if __name__ == "__main__":
 
