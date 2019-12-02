@@ -9,8 +9,6 @@ import datetime
 
 from match_keypoint import *
 
-fpstext = ""
-framecount = 0
 frame = 0
 match_points = []
 fps_list = []
@@ -77,13 +75,23 @@ def capture(
     usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record
 ):
 
-    global fpstext
-    global framecount
+    # csv 書き込む用
     global frame
     global match_points
     global fps_list
     global time_list
     global area_list
+
+    # fps測定用
+    fpstext = ""
+    framecount = 0
+    time1 = 0
+    time2 = 0
+
+    # 前フレーム保持用
+    prev_areas = ()
+    prev_keypoint = []
+    prev_description = []
 
     cam = cv2.VideoCapture(usbcam)
     cam.set(cv2.CAP_PROP_FPS, vidfps)
@@ -105,9 +113,6 @@ def capture(
     else:
         pass
 
-    prev_areas = ()
-    prev_keypoint = []
-    prev_description = []
     starttime = time.perf_counter()
     time_list.append(starttime - starttime)
     while True:
@@ -129,18 +134,20 @@ def capture(
 
         if isinstance(cropimage, list):
             "cropimageがなければ"
-            pass
+            match_points.append([])
+
         else:
             keypoint, description = detect_keypoint(cropimage)
 
             if keypoint == []:
                 "現在のkeypointがなければ"
-                pass
+                match_points.append([])
 
             elif prev_keypoint == []:
                 "過去のkeypointがなければ"
                 prev_keypoint = keypoint
                 prev_description = description
+                match_points.append([])
 
             else:
                 "どちらもある場合"
@@ -154,6 +161,7 @@ def capture(
                 prev_description = description
 
         if vision:
+            # crop結果を重畳
             imdraw = overlay_on_detect_image(img, camera_width, result_areas)
             cv2.imshow("usb Camera", imdraw)
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -162,7 +170,7 @@ def capture(
             pass
 
         if record:
-
+            # 記録する用
             if file_format == "Movie":
                 out.write(img)
 
@@ -348,8 +356,14 @@ if __name__ == "__main__":
 
     finally:
         filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        # 平均fpsを算出
-        fps_ave = sum(fps_list) / len(fps_list)
+        fps_ave = 0
+        try:
+            # 平均fpsを算出
+            fps_ave = sum(fps_list) / len(fps_list)
+
+        except ZeroDivisionError as e:
+            print("{0}".format(e))
+
         with open("../result/" + filename + ".csv", "w") as f:
             writer = csv.writer(f, lineterminator="\n")  # 改行コード（\n）を指定しておく
 
@@ -358,7 +372,7 @@ if __name__ == "__main__":
             )
             # frameのリスト作成
             frame_list = list(range(frame))
-            # frame, matchpointを書き込み
+            # frame, 経過時間,  matchpoint, crop座標を書き込み
             for frame, detecttime, point, area in zip(
                 frame_list, time_list, match_points, area_list
             ):
