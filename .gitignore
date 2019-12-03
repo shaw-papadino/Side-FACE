@@ -7,3 +7,6 @@ result/
 pyproject.toml
 __pycache__/
 *.pyc
+detection/__pycache__/
+edit_image/__pycache__/
+demo/__pycache__/
