@@ -151,7 +151,7 @@ def capture(
 
             else:
                 "どちらもある場合"
-                previmg_points, nextimg_points, matching_list = match_keypoint(
+                previmg_points, _, _ = match_keypoint(
                     prev_keypoint, keypoint, prev_description, description
                 )
                 # print("match:{}".format(len(previmg_points)))

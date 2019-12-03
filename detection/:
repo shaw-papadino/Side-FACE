@@ -39,7 +39,7 @@ def match_keypoint(prevkp, nextkp, prevdes, nextdes):
                 if m.distance < ratio * n.distance:
                     matching_list.append([m])
                     previmg_points.append(list(map(int, prevkp[m.queryIdx].pt)))
-                    # nextimg_points.append(list(map(int, nextkp[m.trainIdx].pt)))
+                    nextimg_points.append(list(map(int, nextkp[m.trainIdx].pt)))
         else:
             pass
     else:
