@@ -5,3 +5,5 @@ tmp/
 demo/fisheye
 result/
 pyproject.toml
+__pycache__/
+*.pyc
