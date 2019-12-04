@@ -8,10 +8,13 @@ import csv
 import datetime
 
 from match_keypoint import *
+from WebcamVideoStream import WebcamVideoStream
+# webcam高速?
+from imutils.video import FPS
+import imutils
+fps = FPS()
 
-frame = 0
 match_points = []
-fps_list = []
 time_list = []
 area_list = []
 
@@ -72,32 +75,24 @@ def apply_areas(result_areas, prev_areas, area_list):
 
 
 def capture(
-    usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record
+    usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record, vs
 ):
 
     # csv 書き込む用
-    global frame
     global match_points
-    global fps_list
     global time_list
     global area_list
-
-    # fps測定用
-    fpstext = ""
-    framecount = 0
-    time1 = 0
-    time2 = 0
 
     # 前フレーム保持用
     prev_areas = ()
     prev_keypoint = []
     prev_description = []
+    
 
     cam = cv2.VideoCapture(usbcam)
     cam.set(cv2.CAP_PROP_FPS, vidfps)
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width)
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_height)
-
     strtime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     if record:
         if file_format == "Movie":
@@ -115,10 +110,12 @@ def capture(
 
     starttime = time.perf_counter()
     time_list.append(starttime - starttime)
+    # vs.start()
+    fps.start()
     while True:
-        t1 = time.perf_counter()
 
         ret, img = cam.read()
+        # img = vs.read()
 
         if not ret:
             continue
@@ -180,22 +177,7 @@ def capture(
         else:
             pass
 
-        # FPS calculation
-        framecount += 1
-        if framecount >= 15:
-            fps = time1 / 15
-            fps_list.append(fps)
-            fpstext = "{:.1f} FPS".format(fps)
-            framecount = 0
-            time1 = 0
-            time2 = 0
-
-        t2 = time.perf_counter()
-        elapsedTime = t2 - t1
-        time1 += 1 / elapsedTime
-        time2 += elapsedTime
-
-        frame += 1
+        fps.update()
 
 
 def detection(img, cascade, minsize):
@@ -342,6 +324,7 @@ if __name__ == "__main__":
     vidfps = 27
 
     try:
+        vs = WebcamVideoStream(usbcam, vidfps, camera_width, camera_height)
         capture(
             usbcam,
             vidfps,
@@ -352,14 +335,17 @@ if __name__ == "__main__":
             file_format,
             vision,
             record,
+            vs
         )
 
     finally:
         filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        fps_ave = 0
+        # fps_ave = 0
+        fps.stop()
         try:
             # 平均fpsを算出
-            fps_ave = sum(fps_list) / len(fps_list)
+            # fps_ave = sum(fps_list) / len(fps_list)
+            fps_ave = fps.fps()
 
         except ZeroDivisionError as e:
             print("{0}".format(e))
@@ -371,7 +357,8 @@ if __name__ == "__main__":
                 ["frames", "time[ms]", "matchpoint", "x", "y", "w", "h", round(fps_ave, 2)]
             )
             # frameのリスト作成
-            frame_list = list(range(frame))
+            # frame_list = list(range(frame))
+            frame_list = list(range(fps._numFrames))
             # frame, 経過時間,  matchpoint, crop座標を書き込み
             for frame, detecttime, point, area in zip(
                 frame_list, time_list, match_points, area_list
