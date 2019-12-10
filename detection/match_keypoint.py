@@ -2,6 +2,13 @@ import cv2
 import numpy as np
 import argparse
 
+def norm_matchpoint(prevkp, nextkp, matchpoint):
+    """
+    matchpointを正規化
+    """
+    # print("matchpoint:{}, prevkp:{}, kp:{}".format(matchpoint, prevkp, nextkp))
+    norm_result = (2 * matchpoint) / (prevkp + nextkp)
+    return norm_result
 
 def detect_keypoint(image):
     """

@@ -15,6 +15,7 @@ import imutils
 fps = FPS()
 
 match_points = []
+norm_results = []
 time_list = []
 area_list = []
 
@@ -80,6 +81,7 @@ def capture(
 
     # csv 書き込む用
     global match_points
+    global norm_results
     global time_list
     global area_list
 
@@ -132,6 +134,7 @@ def capture(
         if isinstance(cropimage, list):
             "cropimageがなければ"
             match_points.append([])
+            norm_results.append(0)
 
         else:
             keypoint, description = detect_keypoint(cropimage)
@@ -139,21 +142,26 @@ def capture(
             if keypoint == []:
                 "現在のkeypointがなければ"
                 match_points.append([])
+                norm_results.append(0)
 
             elif prev_keypoint == []:
                 "過去のkeypointがなければ"
                 prev_keypoint = keypoint
                 prev_description = description
                 match_points.append([])
+                norm_results.append(0)
 
             else:
                 "どちらもある場合"
-                previmg_points, _, _ = match_keypoint(
+                match_point, _, _ = match_keypoint(
                     prev_keypoint, keypoint, prev_description, description
                 )
                 # print("match:{}".format(len(previmg_points)))
-                match_points.append(previmg_points)
-
+                match_points.append(match_point)
+                norm_result = norm_matchpoint(len(prev_keypoint), len(keypoint), len(match_point))
+                # print(match_points)
+                norm_results.append(norm_result)
+                # print(norm_results)
                 prev_keypoint = keypoint
                 prev_description = description
 
@@ -354,16 +362,16 @@ if __name__ == "__main__":
             writer = csv.writer(f, lineterminator="\n")  # 改行コード（\n）を指定しておく
 
             writer.writerow(
-                ["frames", "time[ms]", "matchpoint", "x", "y", "w", "h", round(fps_ave, 2)]
+                ["frames", "time[ms]", "matchpoint", "norm_result", "x", "y", "w", "h", round(fps_ave, 2)]
             )
             # frameのリスト作成
             # frame_list = list(range(frame))
             frame_list = list(range(fps._numFrames))
             # frame, 経過時間,  matchpoint, crop座標を書き込み
-            for frame, detecttime, point, area in zip(
-                frame_list, time_list, match_points, area_list
+            for frame, detecttime, point, norm_result, area in zip(
+                frame_list, time_list, match_points, norm_results, area_list
             ):
                 area = area[0]
                 writer.writerow(
-                    [frame, int(detecttime * 1000), len(point), area[0], area[1], area[2], area[3]]
+                    [frame, int(detecttime * 1000), len(point), norm_result, area[0], area[1], area[2], area[3]]
                 )
