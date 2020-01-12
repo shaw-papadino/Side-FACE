@@ -8,7 +8,7 @@ import csv
 import datetime
 
 from match_keypoint import *
-from WebcamVideoStream import WebcamVideoStream
+# from WebcamVideoStream import WebcamVideoStream
 # webcam高速?
 from imutils.video import FPS
 import imutils
@@ -76,7 +76,7 @@ def apply_areas(result_areas, prev_areas, area_list):
 
 
 def capture(
-    usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record, vs
+    usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record
 ):
 
     # csv 書き込む用
@@ -118,7 +118,7 @@ def capture(
 
         ret, img = cam.read()
         # img = vs.read()
-
+        # print(ret)
         if not ret:
             continue
 
@@ -308,9 +308,9 @@ def overlay_on_detect_image(frames, camera_width, object_areas):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", default="", help="Path of the detection model.")
-    parser.add_argument("--usbcam", type=int, default=0, help="USB Camera number.")
-    parser.add_argument("--minsize", type=int, default=250, help="Detect minimum size.")
+    parser.add_argument("--model", "-m", default="../models/cascade_1125_1_shuf_half.xml", help="Path of the detection model.")
+    parser.add_argument("--usbcam", type=int, default=4, help="USB Camera number.")
+    parser.add_argument("--minsize", type=int, default=300, help="Detect minimum size.")
     parser.add_argument("--vision", action="store_true", help="If you want to show image.")
     parser.add_argument("--record", action="store_true", help="if you want to record.")
     parser.add_argument(
@@ -329,10 +329,10 @@ if __name__ == "__main__":
     record = args.record
     camera_width = 600  # 1024 #600
     camera_height = 480  # 768 #480
-    vidfps = 27
+    vidfps = 29
 
     try:
-        vs = WebcamVideoStream(usbcam, vidfps, camera_width, camera_height)
+        # vs = WebcamVideoStream(usbcam, vidfps, camera_width, camera_height)
         capture(
             usbcam,
             vidfps,
@@ -342,8 +342,7 @@ if __name__ == "__main__":
             minsize,
             file_format,
             vision,
-            record,
-            vs
+            record
         )
 
     finally:
