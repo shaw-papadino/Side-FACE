@@ -86,7 +86,8 @@ def main(path1, path2):
         prev_image, next_image, prev_keypoint, next_keypoint, matching_list
     )
 
-    cv2.imshow("match image", drawimage)
+    # cv2.imshow("match image", drawimage)
+    return drawimage
 
 
 if __name__ == "__main__":
@@ -98,4 +99,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.path1, args.path2)
+    image = main(args.path1, args.path2)
+
+    cv2.imshow("match",image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

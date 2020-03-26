@@ -6,8 +6,10 @@ import time
 from time import sleep
 import csv
 import datetime
+import glob
 
 from match_keypoint import *
+from websocketsidecamserver import WebsocketSidecamServer
 # from WebcamVideoStream import WebcamVideoStream
 # webcam高速?
 from imutils.video import FPS
@@ -74,11 +76,230 @@ def apply_areas(result_areas, prev_areas, area_list):
 
     return result_areas, prev_areas, area_list
 
+def img_file_reading(img_list, vision, camera_width):
+    # csv 書き込む用
+    global match_points
+    global norm_results
+    global time_list
+    global area_list
+
+    # 前フレーム保持用
+    prev_areas = ()
+    prev_keypoint = []
+    prev_description = []
+    flg = False
+    imdraw = []
+
+    starttime = time.perf_counter()
+    time_list.append(starttime - starttime)
+    strtime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    # vs.start()
+    fps.start()
+    for img_path in img_list:
+
+        img = cv2.imread(img_path)
+        # img = vs.read()
+        # print(ret)
+
+        str_frame_time = datetime.datetime.now().strftime("%H-%M-%S-%f")[:-3]
+        detecttime = time.perf_counter() - starttime
+        time_list.append(detecttime)
+
+        result_areas = detection(img, cascade, minsize)
+        result_areas, prev_areas, area_list = apply_areas(result_areas, prev_areas, area_list)
+
+        cropimage = crop_image(img, result_areas)
+
+        if isinstance(cropimage, list):
+            "cropimageがなければ"
+            match_points.append([])
+            norm_results.append(0)
+
+        else:
+            keypoint, description = detect_keypoint(cropimage)
+            # [k.pt for k in keypoint]
+
+            if keypoint == []:
+                "現在のkeypointがなければ"
+                match_points.append([])
+                norm_results.append(0)
+
+            elif prev_keypoint == []:
+                "過去のkeypointがなければ"
+                prev_keypoint = keypoint
+                prev_description = description
+                match_points.append([])
+                norm_results.append(0)
+                if flg == False:
+                    point = apply_kp_point(keypoint)
+                    filename = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+                    with open("../result/" + filename + ".csv", "w") as f:
+                        writer = csv.writer(f, lineterminator="\n")  # 改行コード（\n）を指定しておく
+                        writer.writerow(["x", "y"])
+                        for xy in point:
+                            writer.writerow([xy[0], xy[1]])
+                    flg = True
+
+            else:
+                "どちらもある場合"
+                match_point, _, _ = match_keypoint(
+                    prev_keypoint, keypoint, prev_description, description
+                )
+                # print("match:{}".format(len(previmg_points)))
+                match_points.append(match_point)
+                norm_result = norm_matchpoint(len(prev_keypoint), len(keypoint), len(match_point))
+                # print(match_points)
+                norm_results.append(norm_result)
+                print(norm_result)
+                prev_keypoint = keypoint
+                prev_description = description
+
+        if vision:
+            # crop結果を重畳
+            imdraw = overlay_on_detect_image(img, camera_width, result_areas)
+            cv2.imshow("usb Camera", imdraw)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+        else:
+            pass
+        if record:
+            # 記録する用
+            if file_format == "Movie":
+                out.write(img)
+
+            elif file_format == "Image":
+                print("hoge")
+                cv2.imwrite("./" + str_frame_time + ".jpg", imdraw)
+                # cv2.imwrite("../result/" + strtime + "/" + str_frame_time + ".jpg", imdraw)
+        fps.update()
+
+def usbcam_reading(usbcam, record, file_format, vidfps, vision,camera_width, camera_height):
+    # csv 書き込む用
+    global match_points
+    global norm_results
+    global time_list
+    global area_list
+
+    # 前フレーム保持用
+    prev_areas = ()
+    prev_keypoint = []
+    prev_description = []
+    
+
+    cam = cv2.VideoCapture(usbcam)
+    cam.set(cv2.CAP_PROP_FPS, vidfps)
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, camera_width)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_height)
+    strtime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    if record:
+        if file_format == "Movie":
+            fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+            # 幅
+            W = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+            # 高さ
+            H = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            out = cv2.VideoWriter("../result/" + strtime + ".avi", fourcc, vidfps, (W, H))
+        elif file_format == "Image":
+            if not os.path.isfile("../result/" + strtime):
+                os.mkdir("../result/" + strtime)
+    else:
+        pass
+
+    WS = WebsocketSidecamServer()
+    starttime = time.perf_counter()
+    time_list.append(starttime - starttime)
+    prev_message = "0"
+    message = "0"
+    # vs.start()
+    fps.start()
+    while True:
+
+        ret, img = cam.read()
+        # img = vs.read()
+        # print(ret)
+        if not ret:
+            continue
+
+        str_frame_time = datetime.datetime.now().strftime("%H-%M-%S-%f")[:-3]
+        detecttime = time.perf_counter() - starttime
+        time_list.append(detecttime)
+
+        result_areas = detection(img, cascade, minsize)
+        result_areas, prev_areas, area_list = apply_areas(result_areas, prev_areas, area_list)
+
+        cropimage = crop_image(img, result_areas)
+
+        if isinstance(cropimage, list):
+            "cropimageがなければ"
+            match_points.append([])
+            norm_results.append(0)
+
+        else:
+            keypoint, description = detect_keypoint(cropimage)
+
+            if keypoint == []:
+                "現在のkeypointがなければ"
+                match_points.append([])
+                norm_results.append(0)
+
+            elif prev_keypoint == []:
+                "過去のkeypointがなければ"
+                prev_keypoint = keypoint
+                prev_description = description
+                match_points.append([])
+                norm_results.append(0)
+
+            else:
+                "どちらもある場合"
+                match_point, _, _ = match_keypoint(
+                    prev_keypoint, keypoint, prev_description, description
+                )
+                # print("match:{}".format(len(previmg_points)))
+                match_points.append(match_point)
+                norm_result = norm_matchpoint(len(prev_keypoint), len(keypoint), len(match_point))
+                # print(match_points)
+                norm_results.append(norm_result)
+                # print(norm_results)
+
+                # 更新処理
+                prev_keypoint = keypoint
+                prev_description = description
+                message = "1"
+            if prev_message != message:
+                WS.send_message(message)
+                prev_message = message
+                print(message)
+
+        if vision:
+            # crop結果を重畳
+            imdraw = overlay_on_detect_image(img, camera_width, result_areas)
+            cv2.imshow("usb Camera", imdraw)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+        else:
+            pass
+
+        if record:
+            # 記録する用
+            if file_format == "Movie":
+                out.write(img)
+
+            elif file_format == "Image":
+                cv2.imwrite("../result/" + strtime + "/" + str_frame_time + ".jpg", img)
+
+        else:
+            pass
+        fps.update()
 
 def capture(
-    usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record
+    usbcam, vidfps, camera_width, camera_height, cascade, minsize, file_format, vision, record, input_dir
 ):
-
+    if isinstance(input_dir, str):
+        img_list = sorted(glob.glob(input_dir + "/*.jpg"))
+        img_file_reading(img_list, vision, camera_width)
+    elif isinstance(usbcam, int):
+        usbcam_reading(usbcam, record, file_format, vidfps, vision,camera_width, camera_height)
+    """
     # csv 書き込む用
     global match_points
     global norm_results
@@ -186,7 +407,7 @@ def capture(
             pass
 
         fps.update()
-
+        """
 
 def detection(img, cascade, minsize):
     """
@@ -308,11 +529,12 @@ def overlay_on_detect_image(frames, camera_width, object_areas):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", default="../models/cascade_1125_1_shuf_half.xml", help="Path of the detection model.")
+    parser.add_argument("--model", "-m", default="../models/cascade_sideface.xml", help="Path of the detection model.")# cascade_1125_1_shuf_half.xml
     parser.add_argument("--usbcam", type=int, default=4, help="USB Camera number.")
     parser.add_argument("--minsize", type=int, default=300, help="Detect minimum size.")
     parser.add_argument("--vision", action="store_true", help="If you want to show image.")
     parser.add_argument("--record", action="store_true", help="if you want to record.")
+    parser.add_argument("--input_dir", default=None,help="if you want to record.")
     parser.add_argument(
         "--StoreFileType",
         "-s",
@@ -330,6 +552,7 @@ if __name__ == "__main__":
     camera_width = 600  # 1024 #600
     camera_height = 480  # 768 #480
     vidfps = 29
+    input_dir = args.input_dir
 
     try:
         # vs = WebcamVideoStream(usbcam, vidfps, camera_width, camera_height)
@@ -342,7 +565,8 @@ if __name__ == "__main__":
             minsize,
             file_format,
             vision,
-            record
+            record,
+            input_dir
         )
 
     finally:
