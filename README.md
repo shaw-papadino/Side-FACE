@@ -1,5 +1,5 @@
-# Smile-Camera_v2
-Smile-camera_v2
+# Side-FACE
+Side-FACE
 
 肩乗り型ロボットから真横笑顔を識別する,その時の周囲状況を記録するためのプログラム
     - todo:CNNモデルを追記
